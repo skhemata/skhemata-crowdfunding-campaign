@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo"></div>
+
+  <script type="module">
+    import { html, render } from '@skhemata/skhemata-base';
+    import '../dist/skhemata-crowdfunding-campaign.js';
+
+    const apiUrl = 'https://coral.thrinacia.com/api';
+    const locPath = '/service/restv1/';
+    const campaignId = 1;
+    render(
+      html`
+        <skhemata-crowdfunding-campaign campaign_id=${campaignId} api_url=${apiUrl} loc_path=${locPath}>
+        </skhemata-crowdfunding-campaign>
+      `,
+      document.querySelector('#demo')
+    );
+  </script>
+</body>
+</html>
