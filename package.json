@@ -1,9 +1,18 @@
 {
-  "name": "skhemata-crowdfunding-campaign",
-  "version": "1.0.0",
+  "name": "@skhemata/skhemata-crowdfunding-campaign",
+  "version": "1.0.1",
   "description": "Skhemata Crowdfunding Campaign Web Component. This web component provides crowdfunding campaign functionality (reward/donation based) for a website.",
   "author": "skhemata-crowdfunding-campaign",
-  "license": "MIT",
+  "license": "https://raw.githubusercontent.com/skhemata/skhemata-crowdfunding-campaign/master/LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skhemata/skhemata-crowdfunding-campaign.git"
+  },
+  "keywords": [
+    "skhemata",
+    "faq",
+    "web component"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.js",
   "scripts": {
