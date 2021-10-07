@@ -1,6 +1,6 @@
 {
   "name": "@skhemata/skhemata-crowdfunding-campaign",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Skhemata Crowdfunding Campaign Web Component. This web component provides crowdfunding campaign functionality (reward/donation based) for a website.",
   "author": "skhemata-crowdfunding-campaign",
   "license": "https://raw.githubusercontent.com/skhemata/skhemata-crowdfunding-campaign/master/LICENSE",
