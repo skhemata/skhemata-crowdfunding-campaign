@@ -1,3 +1,8 @@
+/* eslint-disable no-var */
+/* eslint-disable class-methods-use-this */
+/* eslint-disable prefer-const */
+/* eslint-disable consistent-return */
+/* eslint-disable lit-a11y/anchor-is-valid */
 import {
   html,
   css,
@@ -8,6 +13,7 @@ import {
 import { campaignInfo } from './campaignInfo';
 import { campaignFaq } from './campaignFaq';
 import { campaignBackers } from './campaignBackers';
+import { CampaignContribution } from './CampaignContribution';
 
 export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   static get styles() {
@@ -25,9 +31,9 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           font-weight: 700;
           line-height: 1.33em;
           text-transform: none;
-          color: rgba(0,0,0,.8);
+          color: rgba(0, 0, 0, 0.8);
         }
-      `
+      `,
     ];
   }
 
@@ -36,13 +42,19 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       'campaign-info': campaignInfo,
       'campaign-faq': campaignFaq,
       'campaign-backers': campaignBackers,
+      'campaign-contribution': CampaignContribution,
     };
   }
+
   @property({ type: String, attribute: 'api_url' }) apiUrl?: string;
+
   @property({ type: String, attribute: 'loc_path' }) locPath?: string;
+
   @property({ type: String, attribute: 'campaign_id' }) campaignId?: number;
 
-  @property({ type: Object}) campaign?: any;
+  @property({ type: String, attribute: 'currentPage' }) currentPage?: string;
+
+  @property({ type: Object }) campaign?: any;
 
   /**
    * Implement firstUpdated to perform one-time work after
@@ -54,8 +66,24 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     this.tabEvent();
   }
 
+  handleContribute = () => {
+    this.currentPage = 'contribution';
+  };
+
+  handleBack = () => {
+    this.currentPage = '';
+  };
+
   render() {
-    return html`<div class="container">
+    if (this.currentPage === 'contribution') {
+      return html`<campaign-contribution
+        .currentPage="${this.currentPage}"
+        .handleBack="${this.handleBack}"
+      ></campaign-contribution>`;
+    }
+
+    return html`
+    <div class="container">
       <div class="header"> ${this.campaign?.name} </div>
       <div> ${this.returnString(this.campaign?.description)} </div>
       <div> 
@@ -63,8 +91,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           <i class="fas fa-tags"></i>
         </span>
         ${this.campaign?.categories.map(
-          (category: any) =>
-            html`${category.name}` 
+          (category: any) => html`${category.name}`
         )}
       </div>
         <div class="tabs">
@@ -78,13 +105,21 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         </div>
         <div id="tab-content">
           <div class="is-active" data-content="campaign">
-            <campaign-info .apiUrl=${this.apiUrl} .locPath=${this.locPath} .campaignId=${this.campaignId} .campaign=${this.campaign}></campaign-info>
+            <campaign-info .apiUrl=${this.apiUrl} .locPath=${
+      this.locPath
+    } .campaignId=${this.campaignId} .campaign=${this.campaign} .currentPage=${
+      this.currentPage
+    } .handleContribute=${this.handleContribute}></campaign-info>
           </div>
           <div data-content="faq">
             <campaign-faq .campaign=${this.campaign}></campaign-faq>
           </div>
           <div data-content="backers">
-            <campaign-backers .apiUrl=${this.apiUrl} .locPath=${this.locPath} .campaignId=${this.campaignId} .campaign=${this.campaign}></campaign-backers>
+            <campaign-backers .apiUrl=${this.apiUrl} .locPath=${
+      this.locPath
+    } .campaignId=${this.campaignId} .campaign=${
+      this.campaign
+    }></campaign-backers>
           </div>
           <div data-content="updates">
             Updates
@@ -98,55 +133,63 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   }
 
   private getCampaign() {
-    fetch(
-      `${this.apiUrl}${this.locPath}campaign/${this.campaignId}`
-    )
-    .then(response => {
-      if(!response.ok){
-        return;
-      }
-      return response.json();
-    })
-    .then(data => {
-      this.campaign = data;
-    }).catch(() => {
-      console.log('error');
-    });
+    fetch(`${this.apiUrl}${this.locPath}campaign/${this.campaignId}`)
+      .then(response => {
+        if (!response.ok) {
+          return;
+        }
+        return response.json();
+      })
+      .then(data => {
+        this.campaign = data;
+      })
+      .catch(() => {
+        console.log('error');
+      });
   }
 
   private tabEvent() {
-    this.shadowRoot?.getElementById("tabs")?.addEventListener('click', (e) => {
-      let selected:any = e.target;
-      if(selected && selected.getAttribute("data-tab")) {
+    this.shadowRoot?.getElementById('tabs')?.addEventListener('click', e => {
+      let selected: any = e.target;
+      if (selected && selected.getAttribute('data-tab')) {
         this.updateActiveTab(selected);
       }
-    })
+    });
   }
 
-  private updateActiveTab(selected:any) {
+  private updateActiveTab(selected: any) {
     // Update active tab
-    let tabs:any = this.shadowRoot?.getElementById("tabs");
-    for (let i = 0; i < tabs.children.length; i+=1) {
-      if(tabs.children[i] && tabs.children[i].classList.contains("is-active")) {
-        tabs.children[i].classList.remove("is-active");
+    let tabs: any = this.shadowRoot?.getElementById('tabs');
+    for (let i = 0; i < tabs.children.length; i += 1) {
+      if (
+        tabs.children[i] &&
+        tabs.children[i].classList.contains('is-active')
+      ) {
+        tabs.children[i].classList.remove('is-active');
       }
     }
-    selected.parentElement.classList.add("is-active");
+    selected.parentElement.classList.add('is-active');
 
     // Update active tab content
-    let tabContents:any = this.shadowRoot?.getElementById("tab-content");
-    for (let i = 0; i < tabContents.children.length; i+=1) {
-      if(tabContents.children[i] && tabContents.children[i].classList.contains("is-active")) {
-        tabContents.children[i].classList.remove("is-active");
+    let tabContents: any = this.shadowRoot?.getElementById('tab-content');
+    for (let i = 0; i < tabContents.children.length; i += 1) {
+      if (
+        tabContents.children[i] &&
+        tabContents.children[i].classList.contains('is-active')
+      ) {
+        tabContents.children[i].classList.remove('is-active');
       }
-      if(tabContents.children[i].getAttribute("data-content") === selected.getAttribute("data-tab")) {
-        tabContents.children[i].classList.add("is-active");
+      if (
+        tabContents.children[i].getAttribute('data-content') ===
+        selected.getAttribute('data-tab')
+      ) {
+        tabContents.children[i].classList.add('is-active');
       }
     }
   }
 
-  private returnString(str:string) {
-    var fragment = document.createRange().createContextualFragment(`${ str }`);
+  private returnString(str: string) {
+    var fragment = document.createRange().createContextualFragment(`${str}`);
     return fragment;
   }
 }

@@ -27,7 +27,9 @@
     "storybook:build": "tsc && build-storybook"
   },
   "dependencies": {
+    "@power-elements/stripe-elements": "^3.3.0",
     "@skhemata/skhemata-base": "^1.1.0",
+    "lit": "^2.4.0",
     "lit-html": "^2.0.0-rc.3"
   },
   "devDependencies": {
