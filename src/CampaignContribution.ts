@@ -17,6 +17,7 @@ import { SkhemataFormStripe } from './contribution/SkhemataFormStripe';
 import { LoginContribution } from './contribution/LoginContribution';
 import { CreateAccountContribution } from './contribution/CreateAccountContribution';
 import { ExpressCheckoutContribution } from './contribution/ExpressCheckoutContribution';
+import { CardReward } from './components/CardReward';
 
 export class CampaignContribution extends SkhemataBase {
   static get styles() {
@@ -37,6 +38,7 @@ export class CampaignContribution extends SkhemataBase {
       'login-contribution': LoginContribution,
       'create-account-contribution': CreateAccountContribution,
       'express-checkout-contribution': ExpressCheckoutContribution,
+      'card-reward-component': CardReward,
     };
   }
 
@@ -50,6 +52,8 @@ export class CampaignContribution extends SkhemataBase {
     publishable_key: '',
     country_id: 0,
   };
+
+  @property({ type: Object }) campaign?: any;
 
   @property({ type: Object }) stripeElements?: HTMLElement | null;
 
@@ -120,15 +124,16 @@ export class CampaignContribution extends SkhemataBase {
     const { stripeElements } = skhemataFormStripe;
 
     try {
+      // Get the Stripe token
       const token = await stripeElements?.createToken();
-      console.log('token', token.token.id);
+
+      // Check the card
       const cardInfo = {
         name: 'Alex',
         number: '',
         cvc: '',
         card_token: token.token.id,
       };
-      console.log('cardInfo', cardInfo);
 
       const response = await fetch(
         'https://coral.thrinacia.com/api/service/restv1/account/stripe/2/card',
@@ -142,8 +147,12 @@ export class CampaignContribution extends SkhemataBase {
           body: JSON.stringify(cardInfo),
         }
       );
+
+      // Insufficient funds and other errors will be shown here:
       const dataResp = await response.json();
       console.log('response', dataResp);
+
+      // Plege to campaign
       const pledgeInfo = {
         amount: 1,
         anonymous_contribution: null,
@@ -200,22 +209,22 @@ export class CampaignContribution extends SkhemataBase {
     }
   };
 
-  onChange(e: any) {
-    this.submitDisabled = !(e.target.complete && !e.target.hasError);
-  }
+  // onChange(e: any) {
+  //   this.submitDisabled = !(e.target.complete && !e.target.hasError);
+  // }
 
-  onClick() {
-    const stripe: any = this.shadowRoot?.querySelector('stripe-elements');
-    stripe?.createSource();
-  }
+  // onClick() {
+  //   const stripe: any = this.shadowRoot?.querySelector('stripe-elements');
+  //   stripe?.createSource();
+  // }
 
-  onSource(e: any) {
-    this.source = e.detail.source;
-  }
+  // onSource(e: any) {
+  //   this.source = e.detail.source;
+  // }
 
-  onError(e: any) {
-    this.error = e.target.error;
-  }
+  // onError(e: any) {
+  //   this.error = e.target.error;
+  // }
 
   handleCheck = () => {
     const skhemataFormStripe: any = this.shadowRoot?.getElementById(
@@ -279,11 +288,9 @@ export class CampaignContribution extends SkhemataBase {
     this.currentTab = tab;
   };
 
+  // https://stripe.com/docs/payments/quickstart
+
   render() {
-    console.log(this.authState);
-
-    console.log('Key: ', this.stripeInfo.publishable_key);
-
     return html`<div class="container">
       <button class="button" @click="${this.handleBack}">Back</button>
       <button class="button" @click="${this.handleCheck}">Check</button>
@@ -301,6 +308,7 @@ export class CampaignContribution extends SkhemataBase {
                 <skhemata-form-stripe
                   id="skhemata-form-stripe"
                   .publishableKey=${this.stripeInfo.publishable_key}
+                  .clientSecret=${this.stripeInfo.secret_key}
                 ></skhemata-form-stripe>
               </div>
             </div>
@@ -400,6 +408,18 @@ export class CampaignContribution extends SkhemataBase {
       <button class="button" @click="${this.handleContribution}">
         Contribute
       </button>
+
+      <div>
+        ${this.campaign?.pledges && this.campaign?.pledges.length > 0
+          ? this.campaign.pledges.map(
+              (pledge: any) => html`
+                <card-reward-component
+                  .pledge=${pledge}
+                ></card-reward-component>
+              `
+            )
+          : ''}
+      </div>
     </div> `;
   }
 }

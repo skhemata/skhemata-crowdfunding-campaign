@@ -1,3 +1,4 @@
+/* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable prefer-const */
 /* eslint-disable prefer-arrow-callback */
 /* eslint-disable prefer-template */
@@ -9,6 +10,7 @@ import {
   property,
   CSSResult,
 } from '@skhemata/skhemata-base';
+import { CardReward } from './components/CardReward';
 
 export class campaignInfo extends SkhemataBase {
   static get styles() {
@@ -34,8 +36,20 @@ export class campaignInfo extends SkhemataBase {
         .start-end-time {
           border-radius: 5px;
         }
+
+        .rewards-section {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
       `,
     ];
+  }
+
+  static get scopedElements() {
+    return {
+      'card-reward-component': CardReward,
+    };
   }
 
   @property({ type: String, attribute: 'api_url' }) apiUrl?: number;
@@ -47,6 +61,9 @@ export class campaignInfo extends SkhemataBase {
   @property({ type: Object, attribute: 'campaign' }) campaign?: any;
 
   @property({ type: String, attribute: 'currentPage' }) currentPage?: string;
+
+  @property({ type: Array, attribute: 'activeRewards' })
+  activeRewards: number[] = [];
 
   @property({ type: Function })
   handleContribute!: () => void;
@@ -60,6 +77,15 @@ export class campaignInfo extends SkhemataBase {
   updated() {
     this.getCampaignMainImage();
   }
+
+  handleRewardOpen = (index: number) => {
+    if (this.activeRewards.includes(index)) {
+      this.activeRewards = this.activeRewards.filter(item => item !== index);
+    } else {
+      const newArr = [...this.activeRewards, index];
+      this.activeRewards = newArr;
+    }
+  };
 
   render() {
     return html`
@@ -137,6 +163,18 @@ export class campaignInfo extends SkhemataBase {
             <button class="button" @click="${this.handleContribute}">
               Contribute
             </button>
+          </div>
+
+          <div class="rewards-section">
+            ${this.campaign?.pledges && this.campaign?.pledges.length > 0
+              ? this.campaign.pledges.map(
+                  (pledge: any) => html`
+                    <card-reward-component
+                      .pledge=${pledge}
+                    ></card-reward-component>
+                  `
+                )
+              : ''}
           </div>
         </div>
       </div>

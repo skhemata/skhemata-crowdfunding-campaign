@@ -79,6 +79,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       return html`<campaign-contribution
         .currentPage="${this.currentPage}"
         .handleBack="${this.handleBack}"
+        .campaign="${this.campaign}"
       ></campaign-contribution>`;
     }
 
@@ -142,6 +143,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       })
       .then(data => {
         this.campaign = data;
+        console.log('campaign: ', data);
       })
       .catch(() => {
         console.log('error');
