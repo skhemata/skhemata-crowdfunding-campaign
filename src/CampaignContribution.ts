@@ -13,6 +13,7 @@ import {
   CSSResult,
 } from '@skhemata/skhemata-base';
 import '@power-elements/stripe-elements';
+// import Stripe from 'stripe';
 import { SkhemataFormStripe } from './contribution/SkhemataFormStripe';
 import { LoginContribution } from './contribution/LoginContribution';
 import { CreateAccountContribution } from './contribution/CreateAccountContribution';
@@ -51,6 +52,12 @@ export class CampaignContribution extends SkhemataBase {
     secret_key: '',
     publishable_key: '',
     country_id: 0,
+  };
+
+  @property({ type: Object })
+  contributionObj = {
+    secret_key: '',
+    publishable_key: '',
   };
 
   @property({ type: Object }) campaign?: any;
@@ -117,6 +124,9 @@ export class CampaignContribution extends SkhemataBase {
   };
 
   handleContribution = async () => {
+    // https://stripe.com/docs/payments/quickstart
+    // const stripe = new Stripe(this.stripeInfo.secret_key);
+
     const skhemataFormStripe: any = this.shadowRoot?.getElementById(
       'skhemata-form-stripe'
     );
@@ -125,8 +135,10 @@ export class CampaignContribution extends SkhemataBase {
 
     try {
       // Get the Stripe token
+      const checkIntent = await stripeElements?.createToken();
+      console.log('checkIntent: ', checkIntent);
       const token = await stripeElements?.createToken();
-
+      console.log('token: ', token);
       // Check the card
       const cardInfo = {
         name: 'Alex',
@@ -134,9 +146,8 @@ export class CampaignContribution extends SkhemataBase {
         cvc: '',
         card_token: token.token.id,
       };
-
       const response = await fetch(
-        'https://coral.thrinacia.com/api/service/restv1/account/stripe/2/card',
+        'https://coral.thrinacia.com/api/service/restv1/account/stripe/3/card/',
         {
           method: 'POST',
           credentials: 'include',
@@ -147,11 +158,9 @@ export class CampaignContribution extends SkhemataBase {
           body: JSON.stringify(cardInfo),
         }
       );
-
       // Insufficient funds and other errors will be shown here:
       const dataResp = await response.json();
-      console.log('response', dataResp);
-
+      console.log('response1: ', dataResp);
       // Plege to campaign
       const pledgeInfo = {
         amount: 1,
@@ -163,7 +172,6 @@ export class CampaignContribution extends SkhemataBase {
         phone_number_id: null,
         use_sca: 1,
       };
-
       const response2 = await fetch(
         'https://coral.thrinacia.com/api/service/restv1/campaign/1/pledge',
         {
@@ -177,7 +185,29 @@ export class CampaignContribution extends SkhemataBase {
         }
       );
       const dataResp2 = await response2.json();
-      console.log('response2', dataResp2);
+      console.log('response2: ', dataResp2);
+      if (dataResp2.payment_intent_status === 'requires_action') {
+        console.log('requires_action');
+      }
+      // https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/pi_3M4AewAU16hwuwkc0VMkLNRK
+      const response3 = await fetch(
+        `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${dataResp2.charge_id}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': localStorage.getItem('skhemataToken') || '',
+          },
+          body: JSON.stringify(pledgeInfo),
+        }
+      );
+      const dataResp3 = await response3.json();
+      console.log('response3: ', dataResp3);
+      // this.contributionObj.secret_key = dataResp3.result.client_secret;
+      this.contributionObj.secret_key =
+        dataResp3.result.next_action.use_stripe_sdk.stripe_js;
+      this.requestUpdate();
     } catch (error) {
       console.log(error);
     }
@@ -291,11 +321,26 @@ export class CampaignContribution extends SkhemataBase {
   // https://stripe.com/docs/payments/quickstart
 
   render() {
+    console.log('contribution key here: ', this.contributionObj.secret_key);
+
     return html`<div class="container">
+      <script src="https://js.stripe.com/v3/"></script>
       <button class="button" @click="${this.handleBack}">Back</button>
       <button class="button" @click="${this.handleCheck}">Check</button>
       <button class="button" @click="${this.handleLogin}">Login</button>
       <button class="button" @click="${this.handleLogout}">Logout</button>
+      <div>
+        <form id="payment-form">
+          <div id="payment-element">
+            <!--Stripe.js injects the Payment Element-->
+          </div>
+          <button id="submit">
+            <div class="spinner hidden" id="spinner"></div>
+            <span id="button-text">Pay now</span>
+          </button>
+          <div id="payment-message" class="hidden"></div>
+        </form>
+      </div>
 
       ${this.authState
         ? html`
@@ -309,6 +354,7 @@ export class CampaignContribution extends SkhemataBase {
                   id="skhemata-form-stripe"
                   .publishableKey=${this.stripeInfo.publishable_key}
                   .clientSecret=${this.stripeInfo.secret_key}
+                  .contributionSk=${this.contributionObj.secret_key}
                 ></skhemata-form-stripe>
               </div>
             </div>

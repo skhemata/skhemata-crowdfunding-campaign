@@ -31,6 +31,8 @@ export class SkhemataFormStripe extends LitElement {
 
   @property({ type: String, attribute: 'secret-key' }) clientSecret = '';
 
+  @property({ type: String, attribute: 'contributionSk' }) contributionSk = '';
+
   @property({ type: Object }) stripeElements?: HTMLElement | null;
 
   @property({ type: Object }) stripePaymentRequest?: HTMLElement | null;
@@ -82,6 +84,8 @@ export class SkhemataFormStripe extends LitElement {
   // hide-postal-code = "true"
 
   render() {
+    console.log('same key but here: ', this.contributionSk);
+
     return html`
     <div class="field">
       <label class="label"></label>
@@ -94,18 +98,39 @@ export class SkhemataFormStripe extends LitElement {
         
         <div>here: </div>
 
-        <stripe-payment-request
-            generate="payment-method"
-            publishable-key="pk_test_51Ihs84IZwJyED5R3yaNesXPpk74UVpol3LAlR6VqVqduomAVfC0wmuDHLASN0DeJpln7peFBBb1wiZlC6tHjbz23002ACgeSrv"
-            client-secret="pi_3LzpZSIZwJyED5R32uV2J4fs_secret_QTWpItgELiB9BR0HfvO47wBCB"
-            request-payer-name
-            request-payer-email
-            request-payer-phone
-            amount="326"
-            label="Double Double"
-            country="CA"
-            currency="cad">
-        </stripe-payment-request>
+        ${
+          this.contributionSk !== ''
+            ? html`
+                <!-- <stripe-payment-request
+                  generate="payment-method"
+                  publishable-key="${ifDefined(this.publishableKey)}"
+                  client-secret="${this.contributionSk}"
+                  request-payer-name
+                  request-payer-email
+                  request-payer-phone
+                  amount="326"
+                  label="Double Double"
+                  country="CA"
+                  currency="cad"
+                >
+                </stripe-payment-request> -->
+
+                <!-- About iframe here: https://stripe.com/docs/payments/3d-secure -->
+
+                <iframe
+                  title="challengeFrameTitle"
+                  id="challengeFrame"
+                  name="__stripeJSChallengeFrame"
+                  frameborder="0"
+                  height="100%"
+                  width="100%"
+                  class="AuthorizeWithUrlApp-content"
+                  src="${this.contributionSk}"
+                ></iframe>
+              `
+            : html`<div>no key</div>`
+        }
+        
 
       </div>
     </div>
