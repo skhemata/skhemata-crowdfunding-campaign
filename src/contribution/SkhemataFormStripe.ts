@@ -33,6 +33,10 @@ export class SkhemataFormStripe extends LitElement {
 
   @property({ type: String, attribute: 'contributionSk' }) contributionSk = '';
 
+  @property({ type: String, attribute: 'contributionId' }) contributionId = '';
+
+  @property({ type: Object }) confirmInfo = {};
+
   @property({ type: Object }) stripeElements?: HTMLElement | null;
 
   @property({ type: Object }) stripePaymentRequest?: HTMLElement | null;
@@ -83,8 +87,38 @@ export class SkhemataFormStripe extends LitElement {
 
   // hide-postal-code = "true"
 
+  checkThing = async () => {
+    console.log('checkThing');
+    if (this.shadowRoot) {
+      const stripeConfirmationForm: any =
+        this.shadowRoot.querySelector('#challengeFrame');
+      console.log('stripeConfirmationForm: ', stripeConfirmationForm);
+
+      console.log('confirmInfo: ', this.confirmInfo);
+
+      // form?.addEventListener('submit', (e: any) => {
+      //   e.preventDefault();
+      //   console.log('form submitted');
+      // });
+    }
+    const response4 = await fetch(
+      `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${this.contributionId}`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('skhemataToken') || '',
+        },
+        body: JSON.stringify(this.confirmInfo),
+      }
+    );
+    const dataResp4 = await response4.json();
+    console.log('response4: ', dataResp4);
+  };
+
   render() {
-    console.log('same key but here: ', this.contributionSk);
+    console.log('same key but here: ', this.publishableKey);
 
     return html`
     <div class="field">
@@ -97,6 +131,7 @@ export class SkhemataFormStripe extends LitElement {
         ></stripe-elements>
         
         <div>here: </div>
+        <button @click="${this.checkThing}">check thing</button>
 
         ${
           this.contributionSk !== ''

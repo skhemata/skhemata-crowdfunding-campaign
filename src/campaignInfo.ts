@@ -28,7 +28,7 @@ export class campaignInfo extends SkhemataBase {
           display: block;
         }
         .right-info {
-          text-align: center;
+          /* text-align: center; */
         }
         .right-info > div {
           margin-bottom: 30px;
@@ -60,6 +60,130 @@ export class campaignInfo extends SkhemataBase {
 
   @property({ type: Object, attribute: 'campaign' }) campaign?: any;
 
+  @property({ type: Object, attribute: 'currencySymbols' })
+  currencySymbols?: any = {
+    ALL: 'L',
+    AFN: '؋',
+    ARS: '$',
+    AWG: 'ƒ',
+    AUD: '$',
+    AZN: '₼',
+    BSD: '$',
+    BBD: '$',
+    BYR: 'p.',
+    BZD: 'BZ$',
+    BMD: '$',
+    BOB: 'Bs.',
+    BAM: 'KM',
+    BWP: 'P',
+    BGN: 'лв',
+    BRL: 'R$',
+    BND: '$',
+    BIF: 'FBu',
+    KHR: '៛',
+    CAD: '$',
+    KYD: '$',
+    CLP: '$',
+    CNY: '¥',
+    COP: '$',
+    CRC: '₡',
+    HRK: 'kn',
+    CUP: '₱',
+    CZK: 'Kč',
+    DKK: 'kr',
+    DOP: 'RD$',
+    XCD: '$',
+    EGP: '£',
+    SVC: '₡',
+    EEK: 'kr',
+    EUR: '€',
+    FKP: '£',
+    FJD: '$',
+    GHC: 'GH₵',
+    GIP: '£',
+    GTQ: 'Q',
+    GGP: '£',
+    GYD: '$',
+    HNL: 'L',
+    HKD: '$',
+    HUF: 'Ft',
+    ISK: 'kr',
+    INR: '₹',
+    IDR: 'Rp',
+    IRR: '﷼',
+    IMP: '£',
+    ILS: '₪',
+    JMD: '$',
+    JPY: '¥',
+    JEP: '£',
+    KES: 'KSh',
+    KZT: '₸',
+    KPW: '₩',
+    KRW: '₩',
+    KGS: 'лв',
+    LAK: '₭',
+    LVL: 'Ls',
+    LBP: 'ل.ل',
+    LRD: '$',
+    LTL: 'Lt',
+    MKD: 'ден',
+    MYR: 'RM',
+    MUR: '₨',
+    MXN: '$',
+    MNT: '₮',
+    MZN: 'MT',
+    NAD: '$',
+    NPR: '₨',
+    ANG: 'ƒ',
+    NZD: '$',
+    NIO: 'C$',
+    NGN: '₦',
+    NOK: 'kr',
+    OMR: 'ر.ع.',
+    PKR: '₨',
+    PAB: 'B/.',
+    PYG: '₲',
+    PEN: 'S/.',
+    PHP: '₱',
+    PLN: 'zł',
+    QAR: 'ر.ق',
+    RON: 'lei',
+    RUB: '₽',
+    RMB: '￥',
+    SHP: '£',
+    SAR: 'ر.س',
+    RSD: 'Дин.',
+    SCR: '₨',
+    SGD: '$',
+    SBD: '$',
+    SOS: 'Sh.So.',
+    ZAR: 'R',
+    LKR: 'Rs',
+    SEK: 'kr',
+    CHF: 'Fr.',
+    SRD: '$',
+    SYP: '£',
+    TZS: 'TSh',
+    TWD: 'NT$',
+    THB: '฿',
+    TTD: 'TT$',
+    TRY: '₺',
+    TRL: '₺',
+    TVD: '$',
+    UGX: 'USh',
+    UAH: '₴',
+    GBP: '£',
+    USD: '$',
+    UYU: '$U',
+    UZS: "so'm",
+    VEF: 'Bs.',
+    VND: '₫',
+    YER: '﷼',
+    ZWD: 'Z$',
+  };
+
+  @property({ type: Array, attribute: 'currencies' }) currencies?: any;
+
   @property({ type: String, attribute: 'currentPage' }) currentPage?: string;
 
   @property({ type: Array, attribute: 'activeRewards' })
@@ -72,6 +196,16 @@ export class campaignInfo extends SkhemataBase {
 
   async firstUpdated() {
     this.embedListener();
+
+    fetch('https://coral.thrinacia.com/api/service/restv1/locale/currency', {
+      credentials: 'include',
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('currencies: ', data);
+        this.currencies = data;
+      })
+      .catch(e => console.log(e));
   }
 
   updated() {
@@ -117,8 +251,10 @@ export class campaignInfo extends SkhemataBase {
             </div>
           </div>
 
-          <div>About this campaign</div>
-          <div>${this.returnString()}</div>
+          <div>
+            <div>About this campaign</div>
+            <div>${this.returnString()}</div>
+          </div>
         </div>
         <div class="right-info column">
           <div>
@@ -137,8 +273,12 @@ export class campaignInfo extends SkhemataBase {
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${this.campaign?.funded_amount}</span
+              >${this.currencySymbols[
+                this.campaign?.currencies[0].code_iso4217_alpha
+              ]}${this.campaign?.funded_amount}
+              ${this.campaign?.currencies[0].code_iso4217_alpha}</span
             >
+            Raised in ${this.campaign?.days_elapsed} days
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
@@ -155,8 +295,8 @@ export class campaignInfo extends SkhemataBase {
             >
           </div>
           <div class="start-end-time has-background-grey-lighter">
-            <div>${this.campaign?.starts_date_time}</div>
-            <div>${this.campaign?.ends_date_time}</div>
+            <div>Started on ${this.campaign?.starts_date_time}</div>
+            <div>Ends on ${this.campaign?.ends_date_time}</div>
           </div>
 
           <div>
@@ -171,6 +311,7 @@ export class campaignInfo extends SkhemataBase {
                   (pledge: any) => html`
                     <card-reward-component
                       .pledge=${pledge}
+                      .handleContribute=${this.handleContribute}
                     ></card-reward-component>
                   `
                 )

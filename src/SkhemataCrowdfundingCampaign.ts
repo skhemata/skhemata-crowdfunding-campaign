@@ -32,6 +32,12 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           line-height: 1.33em;
           text-transform: none;
           color: rgba(0, 0, 0, 0.8);
+          text-transform: capitalize;
+        }
+
+        .headerContainer {
+          text-align: center;
+          margin-bottom: 1rem;
         }
       `,
     ];
@@ -85,8 +91,16 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
     return html`
     <div class="container">
-      <div class="header"> ${this.campaign?.name} </div>
-      <div> ${this.returnString(this.campaign?.description)} </div>
+      <div class="headerContainer">
+          <div class="header"> 
+            ${this.campaign?.name} 
+          </div>
+          <div>by <b>${this.campaign?.managers[0].first_name} ${
+      this.campaign?.managers[0].last_name
+    }</b>
+          </div>
+      </div>
+      <!-- <div> ${this.returnString(this.campaign?.description)} </div> -->
       <div> 
         <span class="icon">
           <i class="fas fa-tags"></i>

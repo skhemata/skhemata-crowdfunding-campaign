@@ -58,6 +58,11 @@ export class CampaignContribution extends SkhemataBase {
   contributionObj = {
     secret_key: '',
     publishable_key: '',
+    id: '',
+    confirmInfo: {
+      entry_id: '',
+      stripe_transaction_id: '',
+    },
   };
 
   @property({ type: Object }) campaign?: any;
@@ -135,8 +140,8 @@ export class CampaignContribution extends SkhemataBase {
 
     try {
       // Get the Stripe token
-      const checkIntent = await stripeElements?.createToken();
-      console.log('checkIntent: ', checkIntent);
+      // const checkIntent = await stripeElements?.createToken();
+      // console.log('checkIntent: ', checkIntent);
       const token = await stripeElements?.createToken();
       console.log('token: ', token);
       // Check the card
@@ -147,7 +152,7 @@ export class CampaignContribution extends SkhemataBase {
         card_token: token.token.id,
       };
       const response = await fetch(
-        'https://coral.thrinacia.com/api/service/restv1/account/stripe/3/card/',
+        'https://coral.thrinacia.com/api/service/restv1/account/stripe/2/card/',
         {
           method: 'POST',
           credentials: 'include',
@@ -189,6 +194,12 @@ export class CampaignContribution extends SkhemataBase {
       if (dataResp2.payment_intent_status === 'requires_action') {
         console.log('requires_action');
       }
+
+      const confirmInfo = {
+        entry_id: dataResp2.entry_id,
+        stripe_transaction_id: dataResp2.stripe_transaction_id,
+      };
+
       // https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/pi_3M4AewAU16hwuwkc0VMkLNRK
       const response3 = await fetch(
         `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${dataResp2.charge_id}`,
@@ -199,14 +210,33 @@ export class CampaignContribution extends SkhemataBase {
             'Content-Type': 'application/json',
             'x-auth-token': localStorage.getItem('skhemataToken') || '',
           },
-          body: JSON.stringify(pledgeInfo),
+          body: JSON.stringify(confirmInfo),
         }
       );
       const dataResp3 = await response3.json();
       console.log('response3: ', dataResp3);
-      // this.contributionObj.secret_key = dataResp3.result.client_secret;
+
       this.contributionObj.secret_key =
-        dataResp3.result.next_action.use_stripe_sdk.stripe_js;
+        dataResp3.next_action.use_stripe_sdk.stripe_js;
+      this.contributionObj.id = dataResp3.id;
+      this.contributionObj.confirmInfo = confirmInfo;
+
+      // const response4 = await fetch(
+      //   `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${dataResp3.result.id}`,
+      //   {
+      //     method: 'POST',
+      //     credentials: 'include',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'x-auth-token': localStorage.getItem('skhemataToken') || '',
+      //     },
+      //     body: JSON.stringify(confirmInfo),
+      //   }
+      // );
+      // const dataResp4 = await response4.json();
+      // console.log('response4: ', dataResp4);
+
+      // this.contributionObj.secret_key = dataResp3.result.client_secret;
       this.requestUpdate();
     } catch (error) {
       console.log(error);
@@ -355,6 +385,8 @@ export class CampaignContribution extends SkhemataBase {
                   .publishableKey=${this.stripeInfo.publishable_key}
                   .clientSecret=${this.stripeInfo.secret_key}
                   .contributionSk=${this.contributionObj.secret_key}
+                  .contributionId=${this.contributionObj.id}
+                  .confirmInfo=${this.contributionObj.confirmInfo}
                 ></skhemata-form-stripe>
               </div>
             </div>

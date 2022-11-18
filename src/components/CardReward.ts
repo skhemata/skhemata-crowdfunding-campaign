@@ -1,3 +1,4 @@
+/* eslint-disable lit-a11y/anchor-is-valid */
 /* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable import/no-extraneous-dependencies */
 import { CSSResult, html, css, LitElement } from 'lit';
@@ -24,6 +25,9 @@ export class CardReward extends LitElement {
   @property({ type: Boolean })
   openStatus = false;
 
+  @property({ type: Function })
+  handleContribute!: () => void;
+
   //   async firstUpdated() {}
 
   handleRewardOpen = () => {
@@ -47,7 +51,9 @@ export class CardReward extends LitElement {
           </div>
         </div>
         <footer class="card-footer ${this.openStatus ? '' : 'is-hidden'}">
-          <a href="#" class="card-footer-item">Contribute</a>
+          <a class="card-footer-item" @click="${this.handleContribute}"
+            >Contribute</a
+          >
         </footer>
       </div>
     `;
