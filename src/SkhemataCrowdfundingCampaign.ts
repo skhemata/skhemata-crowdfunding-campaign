@@ -101,14 +101,14 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </div>
       </div>
       <!-- <div> ${this.returnString(this.campaign?.description)} </div> -->
-      <div> 
+      <!-- <div> 
         <span class="icon">
           <i class="fas fa-tags"></i>
         </span>
         ${this.campaign?.categories.map(
           (category: any) => html`${category.name}`
         )}
-      </div>
+      </div> -->
         <div class="tabs">
           <ul id="tabs">
             <li class="is-active"><a data-tab="campaign">Campaign</a></li>

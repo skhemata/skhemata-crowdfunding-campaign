@@ -42,6 +42,10 @@ export class campaignInfo extends SkhemataBase {
           flex-direction: column;
           gap: 20px;
         }
+
+        .campaign-description {
+          margin-top: 20px;
+        }
       `,
     ];
   }
@@ -197,15 +201,15 @@ export class campaignInfo extends SkhemataBase {
   async firstUpdated() {
     this.embedListener();
 
-    fetch('https://coral.thrinacia.com/api/service/restv1/locale/currency', {
-      credentials: 'include',
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('currencies: ', data);
-        this.currencies = data;
-      })
-      .catch(e => console.log(e));
+    // fetch('https://coral.thrinacia.com/api/service/restv1/locale/currency', {
+    //   credentials: 'include',
+    // })
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     console.log('currencies: ', data);
+    //     this.currencies = data;
+    //   })
+    //   .catch(e => console.log(e));
   }
 
   updated() {
@@ -251,8 +255,8 @@ export class campaignInfo extends SkhemataBase {
             </div>
           </div>
 
-          <div>
-            <div>About this campaign</div>
+          <div class="campaign-description">
+            <!-- <div>About this campaign</div> -->
             <div>${this.returnString()}</div>
           </div>
         </div>
