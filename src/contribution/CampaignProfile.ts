@@ -19,13 +19,32 @@ export class CampaignProfile extends LitElement {
       }
 
       img {
-        width: 100%;
+        max-width: 100%;
         height: auto;
       }
 
       .image-box {
         width: 200px;
         height: 200px;
+        overflow: hidden;
+        border-radius: 50%;
+        border: 1px solid #e6e6e6;
+      }
+
+      .campaign-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.33em;
+        text-transform: none;
+        color: rgba(0, 0, 0, 0.8);
+        text-transform: capitalize;
       }
     `,
   ];
@@ -46,8 +65,7 @@ export class CampaignProfile extends LitElement {
 
     return html`
       <div class="campaign-info-container">
-        campaign profile
-        <div>
+        <div class="campaign-info">
           <div class="image-box">
             <img
               src="${`https://coral.thrinacia.com/api/image/campaign_detail_large/${this.campaign?.files[0].path_external}`}"
@@ -56,6 +74,13 @@ export class CampaignProfile extends LitElement {
           </div>
           <div>
             <h1>${this.campaign?.name}</h1>
+            <span
+              >by
+              <b
+                >${this.campaign?.managers[0].first_name}
+                ${this.campaign?.managers[0].last_name}</b
+              >
+            </span>
           </div>
         </div>
       </div>

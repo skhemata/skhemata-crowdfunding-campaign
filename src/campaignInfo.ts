@@ -316,6 +316,7 @@ export class campaignInfo extends SkhemataBase {
                     <card-reward-component
                       .pledge=${pledge}
                       .handleContribute=${this.handleContribute}
+                      .campaign=${this.campaign}
                     ></card-reward-component>
                   `
                 )

@@ -26,7 +26,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         #tab-content div.is-active {
           display: block;
         }
-        .header {
+        .header h1 {
           font-size: 2rem;
           font-weight: 700;
           line-height: 1.33em;
@@ -93,7 +93,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     <div class="container">
       <div class="headerContainer">
           <div class="header"> 
-            ${this.campaign?.name} 
+            <h1>${this.campaign?.name}</h1>
           </div>
           <div>by <b>${this.campaign?.managers[0].first_name} ${
       this.campaign?.managers[0].last_name
