@@ -152,10 +152,15 @@ export class CardReward extends LitElement {
   @property({ type: Function })
   handleContribute!: () => void;
 
+  @property({ type: Function })
+  handleChosenReward!: (reward: string, pledge: object) => void;
+
   //   async firstUpdated() {}
 
   handleRewardOpen = () => {
     this.openStatus = !this.openStatus;
+
+    this.handleChosenReward(this.pledge.name, this.pledge);
   };
 
   render() {

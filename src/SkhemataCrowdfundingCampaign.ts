@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-var */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable prefer-const */
@@ -10,6 +11,7 @@ import {
   property,
   CSSResult,
 } from '@skhemata/skhemata-base';
+// import Stripe from 'stripe';
 import { campaignInfo } from './campaignInfo';
 import { campaignFaq } from './campaignFaq';
 import { campaignBackers } from './campaignBackers';
@@ -95,20 +97,9 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           <div class="header"> 
             <h1>${this.campaign?.name}</h1>
           </div>
-          <div>by <b>${this.campaign?.managers[0].first_name} ${
-      this.campaign?.managers[0].last_name
-    }</b>
+          <div>by <b>${this.campaign?.managers[0].first_name} ${this.campaign?.managers[0].last_name}</b>
           </div>
       </div>
-      <!-- <div> ${this.returnString(this.campaign?.description)} </div> -->
-      <!-- <div> 
-        <span class="icon">
-          <i class="fas fa-tags"></i>
-        </span>
-        ${this.campaign?.categories.map(
-          (category: any) => html`${category.name}`
-        )}
-      </div> -->
         <div class="tabs">
           <ul id="tabs">
             <li class="is-active"><a data-tab="campaign">Campaign</a></li>
@@ -120,21 +111,13 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         </div>
         <div id="tab-content">
           <div class="is-active" data-content="campaign">
-            <campaign-info .apiUrl=${this.apiUrl} .locPath=${
-      this.locPath
-    } .campaignId=${this.campaignId} .campaign=${this.campaign} .currentPage=${
-      this.currentPage
-    } .handleContribute=${this.handleContribute}></campaign-info>
+            <campaign-info .apiUrl=${this.apiUrl} .locPath=${this.locPath} .campaignId=${this.campaignId} .campaign=${this.campaign} .currentPage=${this.currentPage} .handleContribute=${this.handleContribute}></campaign-info>
           </div>
           <div data-content="faq">
             <campaign-faq .campaign=${this.campaign}></campaign-faq>
           </div>
           <div data-content="backers">
-            <campaign-backers .apiUrl=${this.apiUrl} .locPath=${
-      this.locPath
-    } .campaignId=${this.campaignId} .campaign=${
-      this.campaign
-    }></campaign-backers>
+            <campaign-backers .apiUrl=${this.apiUrl} .locPath=${this.locPath} .campaignId=${this.campaignId} .campaign=${this.campaign}></campaign-backers>
           </div>
           <div data-content="updates">
             Updates

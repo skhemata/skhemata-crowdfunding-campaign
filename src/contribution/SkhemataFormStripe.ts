@@ -72,50 +72,13 @@ export class SkhemataFormStripe extends LitElement {
   // }
 
   async firstUpdated() {
+    // change to Stripe object ????
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
 
     this.stripePaymentRequest = this.shadowRoot?.querySelector(
       'stripe-payment-request'
     );
-
-    // const stripe: any = this.shadowRoot?.querySelector('stripe-elements');
-    // await stripe?.createSource();
-    // const element = await stripe.elements();
-    // const card = await element?.create('card');
-    // card?.mount(this.shadowRoot?.querySelector('stripe-payment-request'));
   }
-
-  // hide-postal-code = "true"
-
-  checkThing = async () => {
-    console.log('checkThing');
-    if (this.shadowRoot) {
-      const stripeConfirmationForm: any =
-        this.shadowRoot.querySelector('#challengeFrame');
-      console.log('stripeConfirmationForm: ', stripeConfirmationForm);
-
-      console.log('confirmInfo: ', this.confirmInfo);
-
-      // form?.addEventListener('submit', (e: any) => {
-      //   e.preventDefault();
-      //   console.log('form submitted');
-      // });
-    }
-    const response4 = await fetch(
-      `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${this.contributionId}`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': localStorage.getItem('skhemataToken') || '',
-        },
-        body: JSON.stringify(this.confirmInfo),
-      }
-    );
-    const dataResp4 = await response4.json();
-    console.log('response4: ', dataResp4);
-  };
 
   render() {
     console.log('same key but here: ', this.publishableKey);
@@ -129,43 +92,6 @@ export class SkhemataFormStripe extends LitElement {
           hide-postal-code = "true"  
           publishable-key="${ifDefined(this.publishableKey)}"
         ></stripe-elements>
-        
-        <div>here: </div>
-        <button @click="${this.checkThing}">check thing</button>
-
-        ${
-          this.contributionSk !== ''
-            ? html`
-                <!-- <stripe-payment-request
-                  generate="payment-method"
-                  publishable-key="${ifDefined(this.publishableKey)}"
-                  client-secret="${this.contributionSk}"
-                  request-payer-name
-                  request-payer-email
-                  request-payer-phone
-                  amount="326"
-                  label="Double Double"
-                  country="CA"
-                  currency="cad"
-                >
-                </stripe-payment-request> -->
-
-                <!-- About iframe here: https://stripe.com/docs/payments/3d-secure -->
-
-                <iframe
-                  title="challengeFrameTitle"
-                  id="challengeFrame"
-                  name="__stripeJSChallengeFrame"
-                  frameborder="0"
-                  height="100%"
-                  width="100%"
-                  class="AuthorizeWithUrlApp-content"
-                  src="${this.contributionSk}"
-                ></iframe>
-              `
-            : html`<div>no key</div>`
-        }
-        
 
       </div>
     </div>
