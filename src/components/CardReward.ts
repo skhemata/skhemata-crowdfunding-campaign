@@ -153,9 +153,17 @@ export class CardReward extends LitElement {
   handleContribute!: () => void;
 
   @property({ type: Function })
+  handleContributionAmount!: () => void;
+
+  @property({ type: Number })
+  contributionAmount = 0;
+
+  @property({ type: Function })
   handleChosenReward!: (reward: string, pledge: object) => void;
 
-  //   async firstUpdated() {}
+  async firstUpdated() {
+    this.contributionAmount = this.pledge.amount;
+  }
 
   handleRewardOpen = () => {
     this.openStatus = !this.openStatus;
@@ -189,6 +197,17 @@ export class CardReward extends LitElement {
 
             <br />
             <time datetime="2016-1-1">${this.pledge.created}</time>
+
+            <div>
+              <input
+                min="1"
+                class="input"
+                type="number"
+                placeholder="Contribution Amount"
+                .value="${this.contributionAmount.toString()}"
+                @input="${this.handleContributionAmount}"
+              />
+            </div>
           </div>
         </div>
         <footer class="card-footer ${this.openStatus ? '' : 'is-hidden'}">

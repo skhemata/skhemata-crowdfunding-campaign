@@ -89,6 +89,29 @@ export class CampaignContribution extends SkhemataBase {
           border: 5px solid black;
           border-radius: 0.5rem;
         }
+
+        .cardReward {
+          cursor: pointer;
+        }
+
+        .title {
+          border-bottom: 1px solid rgba(34, 36, 38, 0.15);
+          padding-bottom: 4px;
+        }
+
+        /* .review-payment-section .button {
+          height: 30px !important;
+          padding: 0.5rem 0.7rem !important;
+        } */
+
+        .review-payment-section .contributeBtn {
+          height: 28px !important;
+        }
+
+        .dropdown .button {
+          justify-content: space-between;
+          width: 200px;
+        }
       `,
     ];
   }
@@ -274,10 +297,14 @@ export class CampaignContribution extends SkhemataBase {
 
   @property({ type: Object }) stripe?: any;
 
+  @property({ type: Boolean })
+  openStatus = true;
+
   /**
    * Implement firstUpdated to perform one-time work after
    * the element’s template has been created.
    */
+
   async firstUpdated() {
     await this.getStripeKeys();
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
@@ -285,6 +312,10 @@ export class CampaignContribution extends SkhemataBase {
     this.handleAuthStateChange();
     this.initStripe();
   }
+
+  handleRewardOpen = () => {
+    this.openStatus = !this.openStatus;
+  };
 
   initStripe() {
     if (window.Stripe) {
@@ -373,7 +404,7 @@ export class CampaignContribution extends SkhemataBase {
 
       // Plege to campaign
       const pledgeInfo = {
-        amount: 1,
+        amount: this.contributionAmount,
         anonymous_contribution: null,
         anonymous_contribution_partial: null,
         pledge_level_id: null,
@@ -545,9 +576,16 @@ export class CampaignContribution extends SkhemataBase {
   handleChosenReward = (reward: string, pledge?: any) => {
     console.log(reward);
     if (reward === 'standard') {
+      if (this.contributionAmount > 1) {
+        this.contributionAmount = 1;
+      }
       this.chosenReward = reward;
+      this.openStatus = true;
     } else {
       this.chosenReward = pledge.name;
+
+      this.contributionAmount = pledge.amount;
+      this.openStatus = false;
     }
   };
 
@@ -712,7 +750,10 @@ export class CampaignContribution extends SkhemataBase {
                 </div>
               </div>
 
-              <button class="button" @click="${this.handleContribution}">
+              <button
+                class="button contributeBtn has-background-info has-text-white"
+                @click="${this.handleContribution}"
+              >
                 Contribute
               </button>
             </div>
@@ -724,22 +765,37 @@ export class CampaignContribution extends SkhemataBase {
           <h3 class="title">Choose Your Reward</h3>
 
           <div class="reward-section-box">
-            <div class="control">
-              <div
-                class="${this.chosenReward === 'standard' ? 'reward-btn' : ''}"
-                @click="${() => this.handleChosenReward('standard')}"
-              >
-                <input
-                  min="1"
-                  class="input"
-                  type="number"
-                  placeholder="Contribution Amount"
-                  .value="${this.contributionAmount.toString()}"
-                  @input="${this.handleContributionAmount}"
-                />
+            <!--  -->
+            <div
+              class="card cardReward ${this.chosenReward === 'standard'
+                ? 'reward-btn'
+                : ''}"
+              @click="${() => this.handleChosenReward('standard')}"
+            >
+              <header class="card-header" @click="${this.handleRewardOpen}">
+                <p class="card-header-title">
+                  <span
+                    >No reward selected. I just want to contribute to this
+                    campaign.</span
+                  >
+                </p>
+              </header>
+              <div class="card-content ${this.openStatus ? '' : 'is-hidden'}">
+                <div class="content">
+                  <div class="control">
+                    <input
+                      min="1"
+                      class="input"
+                      type="number"
+                      placeholder="Contribution Amount"
+                      .value="${this.contributionAmount.toString()}"
+                      @input="${this.handleContributionAmount}"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-
+            <!--  -->
             <div class="control">
               ${this.campaign?.pledges && this.campaign?.pledges.length > 0
                 ? this.campaign.pledges.map(
@@ -753,6 +809,9 @@ export class CampaignContribution extends SkhemataBase {
                           .pledge=${pledge}
                           .campaign=${this.campaign}
                           .handleChosenReward=${this.handleChosenReward}
+                          .handleContributionAmount=${this
+                            .handleContributionAmount}
+                          .contributionAmount=${this.contributionAmount}
                         ></card-reward-component>
                       </div>
                     `
