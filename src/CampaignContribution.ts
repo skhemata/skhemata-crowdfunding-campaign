@@ -99,11 +99,6 @@ export class CampaignContribution extends SkhemataBase {
           padding-bottom: 4px;
         }
 
-        /* .review-payment-section .button {
-          height: 30px !important;
-          padding: 0.5rem 0.7rem !important;
-        } */
-
         .review-payment-section .contributeBtn {
           height: 28px !important;
         }
