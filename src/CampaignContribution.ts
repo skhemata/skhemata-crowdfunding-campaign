@@ -1,3 +1,4 @@
+/* eslint-disable lit/binding-positions */
 /* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable no-var */
 /* eslint-disable class-methods-use-this */
@@ -20,6 +21,8 @@ import { CreateAccountContribution } from './contribution/CreateAccountContribut
 import { ExpressCheckoutContribution } from './contribution/ExpressCheckoutContribution';
 import { CardReward } from './components/CardReward';
 import { CampaignProfile } from './contribution/CampaignProfile';
+import { Menu } from './components/Menu';
+import { CardInfo } from './contribution/CardInfo';
 
 export class CampaignContribution extends SkhemataBase {
   static get styles() {
@@ -29,6 +32,10 @@ export class CampaignContribution extends SkhemataBase {
         stripe-elements {
           --stripe-elements-base-line-height: 1.57rem;
           --stripe-elements-border: 1px solid #dbdbdb;
+        }
+
+        *, ::before, ::after {
+            box-sizing: border-box;
         }
 
         .contribution-container-wrapper {
@@ -85,6 +92,7 @@ export class CampaignContribution extends SkhemataBase {
           gap: 3rem;
         }
 
+
         .reward-btn {
           border: 5px solid black;
           border-radius: 0.5rem;
@@ -100,13 +108,38 @@ export class CampaignContribution extends SkhemataBase {
         }
 
         .review-payment-section .contributeBtn {
-          height: 28px !important;
+          max-height: 40px !important;
         }
 
         .dropdown .button {
           justify-content: space-between;
           width: 200px;
         }
+
+       /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        .btn-back-wrapper {
+          display: grid;
+          grid-template-columns: 2fr 1fr; 
+        }
+
+        .btn-back-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-right: 3rem;
+        }
+
       `,
     ];
   }
@@ -119,6 +152,8 @@ export class CampaignContribution extends SkhemataBase {
       'express-checkout-contribution': ExpressCheckoutContribution,
       'card-reward-component': CardReward,
       'campaign-profile': CampaignProfile,
+      'menu-component': Menu,
+      'card-information-component': CardInfo,
     };
   }
 
@@ -273,7 +308,19 @@ export class CampaignContribution extends SkhemataBase {
 
   @property({ type: Object }) stripeElements?: HTMLElement | null;
 
+  @property({ type: String, attribute: 'api_full' }) apiFull?: string;
+
   @property({ type: String, attribute: 'currentPage' }) currentPage?: string;
+
+  @property({ type: String, attribute: 'nameOnCard' }) nameOnCard?: string;
+
+  @property({ type: String, attribute: 'nameOnCardError' }) nameOnCardError?: string;
+
+  @property({ type: String, attribute: 'contributionAmountError' }) contributionAmountError?: string;
+
+  @property({ type: String, attribute: 'stripeCardError' }) stripeCardError?: string;
+
+  @property({ type: String, attribute: 'campaignError' }) campaignError?: string;
 
   @property({ type: String, attribute: 'currentTab' }) currentTab = 'Login';
 
@@ -285,6 +332,8 @@ export class CampaignContribution extends SkhemataBase {
   @property({ type: Object }) source: any;
 
   @property({ type: Boolean }) submitDisabled = false;
+
+  @property({ type: Boolean }) loadingState = false;
 
   @property({ type: Boolean }) authState = false;
 
@@ -301,10 +350,10 @@ export class CampaignContribution extends SkhemataBase {
    */
 
   async firstUpdated() {
+    this.handleAuthStateChange();
     await this.getStripeKeys();
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
     console.log('stripeElements', this.stripeElements);
-    this.handleAuthStateChange();
     this.initStripe();
   }
 
@@ -313,7 +362,7 @@ export class CampaignContribution extends SkhemataBase {
   };
 
   initStripe() {
-    if (window.Stripe) {
+    if (window.Stripe && this.authState) {
       const stripe: any = window.Stripe(this.stripeInfo.publishable_key);
       console.log('stripe', stripe);
       this.stripe = stripe;
@@ -336,12 +385,16 @@ export class CampaignContribution extends SkhemataBase {
 
   getStripeKeys = async () => {
     const authToken = window.localStorage.getItem('skhemataToken');
-    console.log('authToken', authToken);
+    console.log('authToken: ', authToken);
+    console.log('state: ', this.authState);
 
     // StripeInfo
+    if(this.authState) {
+
+    
     try {
       const response = await fetch(
-        'https://coral.thrinacia.com/api/service/restv1/account/stripe/application',
+        `${this.apiFull}account/stripe/application`,
         {
           // credentials: 'include',
           headers: {
@@ -356,11 +409,16 @@ export class CampaignContribution extends SkhemataBase {
     } catch (error) {
       console.log(error);
     }
+  }
   };
 
   handleContribution = async () => {
     // https://stripe.com/docs/payments/quickstart
     // const stripe = new Stripe(this.stripeInfo.secret_key);
+
+    if(this.nameOnCard && this.contributionAmount) {
+      this.nameOnCardError = ''
+      this.contributionAmountError = ''
 
     const skhemataFormStripe: any = this.shadowRoot?.getElementById(
       'skhemata-form-stripe'
@@ -368,94 +426,119 @@ export class CampaignContribution extends SkhemataBase {
 
     const { stripeElements } = skhemataFormStripe;
 
-    try {
-      // Get the Stripe token
-      // const checkIntent = await stripeElements?.createToken();
-      // console.log('checkIntent: ', checkIntent);
-      const token = await stripeElements?.createToken();
-      console.log('token: ', token);
-      // Check the card
-      const cardInfo = {
-        name: 'Alex',
-        number: '',
-        cvc: '',
-        card_token: token.token.id,
-      };
-      const response = await fetch(
-        'https://coral.thrinacia.com/api/service/restv1/account/stripe/2/card/',
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('skhemataToken') || '',
-          },
-          body: JSON.stringify(cardInfo),
+      try {
+        this.loadingState = true;
+        // Get the Stripe token
+        // const checkIntent = await stripeElements?.createToken();
+        // console.log('checkIntent: ', checkIntent);
+        const token = await stripeElements?.createToken();
+        console.log('token: ', token);
+        // Check the card
+        const cardInfo = {
+          name: this.nameOnCard,
+          number: '',
+          cvc: '',
+          card_token: token.token.id,
+        };
+        const response = await fetch(
+          `${this.apiFull}account/stripe/2/card/`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': localStorage.getItem('skhemataToken') || '',
+            },
+            body: JSON.stringify(cardInfo),
+          }
+        );
+        // Insufficient funds and other errors will be shown here:
+        const dataResp = await response.json();
+        console.log('response1: ', dataResp);
+
+        // Plege to campaign
+        const pledgeInfo = {
+          amount: this.contributionAmount,
+          anonymous_contribution: null,
+          anonymous_contribution_partial: null,
+          pledge_level_id: null,
+          stripe_account_card_id: dataResp.stripe_account_card_id,
+          shipping_address_id: null,
+          phone_number_id: null,
+          use_sca: 1,
+        };
+        const response2 = await fetch(
+          `${this.apiFull}campaign/1/pledge`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': localStorage.getItem('skhemataToken') || '',
+            },
+            body: JSON.stringify(pledgeInfo),
+          }
+        );
+        const dataResp2 = await response2.json();
+        console.log('response2: ', dataResp2);
+        if(dataResp2.message === 'Campaign not approved') {
+          this.campaignError = 'Campaign not approved'
         }
-      );
-      // Insufficient funds and other errors will be shown here:
-      const dataResp = await response.json();
-      console.log('response1: ', dataResp);
 
-      // Plege to campaign
-      const pledgeInfo = {
-        amount: this.contributionAmount,
-        anonymous_contribution: null,
-        anonymous_contribution_partial: null,
-        pledge_level_id: null,
-        stripe_account_card_id: dataResp.stripe_account_card_id,
-        shipping_address_id: null,
-        phone_number_id: null,
-        use_sca: 1,
-      };
-      const response2 = await fetch(
-        'https://coral.thrinacia.com/api/service/restv1/campaign/1/pledge',
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('skhemataToken') || '',
-          },
-          body: JSON.stringify(pledgeInfo),
+        if (dataResp2.payment_intent_status === 'requires_action') {
+          // Use Stripe.js to handle required card action
+
+          this.stripe
+            .handleCardAction(dataResp2.payment_intent_client_secret)
+            .then((result: any) => {
+              // if (result.error) {
+              console.log('paymentIntent: ', result);
+
+              fetch(
+                `${this.apiFull}account/stripe/payment-intent-direct/confirm/${result.paymentIntent.id}`,
+                {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': localStorage.getItem('skhemataToken') || '',
+                  },
+                  // body: JSON.stringify({}),
+                }
+              )
+                .then(finalRes => {
+                  console.log('response final: ', finalRes);
+                })
+                .catch((e: any) => console.log('e2', e));
+            })
+            .catch((e: any) => console.log(e));
         }
-      );
-      const dataResp2 = await response2.json();
-      console.log('response2: ', dataResp2);
 
-      if (dataResp2.payment_intent_status === 'requires_action') {
-        // Use Stripe.js to handle required card action
+        this.stripeCardError = '';
+        this.loadingState = false;
 
-        this.stripe
-          .handleCardAction(dataResp2.payment_intent_client_secret)
-          .then((result: any) => {
-            // if (result.error) {
-            console.log('paymentIntent: ', result);
+        this.requestUpdate();
+      } catch (error: any) {
+        console.log('Error: ', error);
+        this.loadingState = false;
+        this.stripeCardError = error.message;
+      }
+    } else {
 
-            fetch(
-              `https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${result.paymentIntent.id}`,
-              {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-auth-token': localStorage.getItem('skhemataToken') || '',
-                },
-                // body: JSON.stringify({}),
-              }
-            )
-              .then(finalRes => {
-                console.log('response final: ', finalRes);
-              })
-              .catch((e: any) => console.log('e2', e));
-          })
-          .catch((e: any) => console.log(e));
+      if(!this.nameOnCard) {
+        this.nameOnCardError = 'This field cannot be empty';
+      } else {
+        this.nameOnCardError = '';
       }
 
-      this.requestUpdate();
-    } catch (error) {
-      console.log('Error: ', error);
+      if(!this.contributionAmount) {
+        this.contributionAmountError = 'This field cannot be empty';
+      } else {
+        this.contributionAmountError = '';
+      }
+      
     }
+
   };
 
   postData = async (url = '', data = {}) => {
@@ -483,6 +566,10 @@ export class CampaignContribution extends SkhemataBase {
       }
     }
   };
+
+  handleNameOnCardChange = (e: any) => {
+    this.nameOnCard = e.target.value;
+  }
 
   // onChange(e: any) {
   //   this.submitDisabled = !(e.target.complete && !e.target.hasError);
@@ -522,7 +609,7 @@ export class CampaignContribution extends SkhemataBase {
       password: '__bootstrap__',
     };
 
-    fetch('https://coral.thrinacia.com/api/service/restv1/authenticate', {
+    fetch(`${this.apiFull}authenticate`,{
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -533,6 +620,7 @@ export class CampaignContribution extends SkhemataBase {
       .then(user => {
         console.log('Success:', user);
         window.localStorage.setItem('skhemataToken', user.auth_token);
+        this.handleAuthStateChange();
         this.requestUpdate();
       })
       .catch(error => {
@@ -542,7 +630,7 @@ export class CampaignContribution extends SkhemataBase {
 
   // logout
   handleLogout = () => {
-    fetch('https://coral.thrinacia.com/api/service/restv1/logout', {
+    fetch(`${this.apiFull}logout`,{
       method: 'POST',
       // credentials: 'include',
       // mode: 'cors',
@@ -592,7 +680,17 @@ export class CampaignContribution extends SkhemataBase {
         <campaign-profile .campaign=${this.campaign}></campaign-profile>
       </div>
       <!-- <script src="https://js.stripe.com/v3/"></script> -->
-      <button class="button btn-back" @click="${this.handleBack}">Back</button>
+      <div class="btn-back-wrapper">
+        <div class="btn-back-container">
+          <button class="button btn-back" @click="${this.handleBack}">Back</button>
+          
+          <div class="contribution-menuWrapper">
+            <menu-component .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}" .apiFull="${this.apiFull}"></menu-component>
+          </div>
+        </div>
+
+        <div></div>
+      </div>
       <!-- <button class="button" @click="${this.handleCheck}">Check</button>
       <button class="button" @click="${this.handleLogin}">Login</button>
       <button class="button" @click="${this.handleLogout}">Logout</button> -->
@@ -619,11 +717,14 @@ export class CampaignContribution extends SkhemataBase {
                   <div class="reward-section-box">
                     <div class="control">
                       <input
-                        class="input"
+                        class="input ${this.nameOnCardError ? "is-danger" : ""}"
                         type="text"
                         placeholder="Name on Card"
+                        @change="${this.handleNameOnCardChange}"
                       />
+                      ${this.nameOnCardError ? html`<p class="help is-danger">${this.nameOnCardError}</p>` : html``}
                     </div>
+
                     <div class="control">
                       <skhemata-form-stripe
                         id="skhemata-form-stripe"
@@ -633,6 +734,7 @@ export class CampaignContribution extends SkhemataBase {
                         .contributionId=${this.contributionObj.id}
                         .confirmInfo=${this.contributionObj.confirmInfo}
                       ></skhemata-form-stripe>
+                      <!-- ${this.stripeCardError ? html`<p class="help is-danger">${this.stripeCardError}</p>` : html``} -->
                     </div>
                   </div>
                 </div>
@@ -641,7 +743,7 @@ export class CampaignContribution extends SkhemataBase {
                 <!-- Account Information -->
                 <div class="field">
                   <h3 class="title">Account Information</h3>
-                  <div class="tabs">
+                  <div class="tabs is-boxed">
                     <ul>
                       <li
                         class="${this.currentTab === 'Login'
@@ -680,13 +782,19 @@ export class CampaignContribution extends SkhemataBase {
                   </div>
 
                   ${this.currentTab === 'Login'
-                    ? html` <login-contribution></login-contribution>`
+                    ? html` <login-contribution .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}"></login-contribution>`
                     : null}
                   ${this.currentTab === 'CreateAccount'
-                    ? html` <create-account-contribution></create-account-contribution>`
+                    ? html`
+                      <create-account-contribution></create-account-contribution>
+                      <!-- <card-information-component></card-information-component> -->
+                      `
                     : null}
                   ${this.currentTab === 'ExpressCheckout'
-                    ? html` <express-checkout-contribution></express-checkout-contribution>`
+                    ? html `
+                      <express-checkout-contribution></express-checkout-contribution>
+                      <!-- <card-information-component></card-information-component> -->
+                      `
                     : null}
                 </div>
               `}
@@ -745,12 +853,16 @@ export class CampaignContribution extends SkhemataBase {
                 </div>
               </div>
 
-              <button
-                class="button contributeBtn has-background-info has-text-white"
-                @click="${this.handleContribution}"
-              >
-                Contribute
-              </button>
+              <div>
+                <button
+                  class="button contributeBtn has-background-info has-text-white ${this.loadingState ? 'is-loading' : ''}"
+                  @click="${this.handleContribution}"
+                >
+                  Contribute
+                </button>
+
+                ${this.campaignError ? html`<p class="help is-danger">${this.campaignError}</p>` : html``}
+              </div>
             </div>
           </div>
         </div>
@@ -780,12 +892,13 @@ export class CampaignContribution extends SkhemataBase {
                   <div class="control">
                     <input
                       min="1"
-                      class="input"
+                      class="input input-number ${this.contributionAmountError ? "is-danger" : ""}"
                       type="number"
                       placeholder="Contribution Amount"
                       .value="${this.contributionAmount.toString()}"
                       @input="${this.handleContributionAmount}"
                     />
+                    ${this.contributionAmountError ? html`<p class="help is-danger">${this.contributionAmountError}</p>` : html``}
                   </div>
                 </div>
               </div>

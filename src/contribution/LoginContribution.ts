@@ -6,37 +6,56 @@ import { Bulma } from '@skhemata/skhemata-css';
 import { loginRequest } from '../utils/requests';
 
 export class LoginContribution extends LitElement {
-  static styles = <CSSResult[]>[Bulma, css``];
+  static styles = <CSSResult[]>[Bulma, css`
+    .formWrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .formWrapper div {
+      width: 100%;
+    }
+  `];
 
   @property({ type: Boolean }) submitDisabled = false;
+
+  @property({ type: Boolean }) authState = false;
+
+  @property({ type: Function })
+  handleAuthStateChange!: () => void;
 
   //   firstUpdated() {}
 
   handleLogin = async () => {
-    const email = this.shadowRoot?.querySelector(
-      'input[type="email"]'
-    ) as HTMLInputElement;
-    const password = this.shadowRoot?.querySelector(
-      'input[type="password"]'
-    ) as HTMLInputElement;
-    if (email.value && password.value) {
-      const info = {
-        email: email.value,
-        password: password.value,
-      };
-      console.log('INFO: ', info);
+    if(this.shadowRoot) {
+      const email = this.shadowRoot?.querySelector(
+        'input[type="email"]'
+      ) as HTMLInputElement;
+      const password = this.shadowRoot?.querySelector(
+        'input[type="password"]'
+      ) as HTMLInputElement;
+      if (email.value && password.value) {
+        const info = {
+          email: email.value,
+          password: password.value,
+        };
+        console.log('INFO: ', info);
 
-      const res = await loginRequest('/authenticate', 'POST', info);
-      const data = await res.json();
-      window.localStorage.setItem('skhemataToken', data.auth_token);
-      console.log(data);
-      this.requestUpdate();
-    }
+        const res = await loginRequest('/authenticate', 'POST', info);
+        const data = await res.json();
+        window.localStorage.setItem('skhemataToken', data.auth_token);
+        console.log(data);
+        this.handleAuthStateChange();
+        this.requestUpdate();
+      }
+  }
   };
 
   render() {
     return html`
-      <div class="field">
+      <div class="field formWrapper">
         <div class="control">
           <input class="input" type="email" placeholder="Email" />
         </div>
@@ -45,7 +64,7 @@ export class LoginContribution extends LitElement {
         </div>
 
         <button class="button" @click="${this.handleLogin}">
-          Login and Contribute
+          Login
         </button>
       </div>
     `;

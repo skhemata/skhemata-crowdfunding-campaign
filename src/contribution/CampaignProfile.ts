@@ -4,6 +4,7 @@
 import { CSSResult, html, css, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { Bulma } from '@skhemata/skhemata-css';
+import { Menu } from '../components/Menu';
 
 export class CampaignProfile extends LitElement {
   static styles = <CSSResult[]>[
@@ -49,6 +50,12 @@ export class CampaignProfile extends LitElement {
     `,
   ];
 
+  static get scopedElements() {
+    return {
+      'menu-component': Menu,
+    };
+  }
+
   @property({ type: Boolean })
   openStatus = false;
 
@@ -81,6 +88,9 @@ export class CampaignProfile extends LitElement {
                 ${this.campaign?.managers[0].last_name}</b
               >
             </span>
+          </div>
+          <div class="campaign-info-menuWrapper">
+            <menu-component></menu-component>
           </div>
         </div>
       </div>

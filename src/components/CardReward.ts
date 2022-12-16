@@ -17,6 +17,22 @@ export class CardReward extends LitElement {
       .cardReward header {
         cursor: pointer;
       }
+
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        .pledge-date {
+          margin: 1rem 0;
+        }
     `,
   ];
 
@@ -168,11 +184,13 @@ export class CardReward extends LitElement {
   handleRewardOpen = () => {
     this.openStatus = !this.openStatus;
 
-    this.handleChosenReward(this.pledge.name, this.pledge);
+    if(this.handleChosenReward !== undefined) {
+      this.handleChosenReward(this.pledge.name, this.pledge);
+    }
+
   };
 
   render() {
-    console.log(this.pledge);
 
     return html`
       <div class="card cardReward">
@@ -195,10 +213,13 @@ export class CardReward extends LitElement {
           <div class="content">
             ${this.pledge.description}
 
-            <br />
-            <time datetime="2016-1-1">${this.pledge.created}</time>
+            <div class="pledge-date">
+              <time datetime="2016-1-1">Created: ${new Date(this.pledge.created).toDateString()}</time>
+            </div>
 
+            ${this.handleChosenReward === undefined ? html`` : html`
             <div>
+              <label class="label">Contribution Amount</label>
               <input
                 min="1"
                 class="input"
@@ -208,6 +229,7 @@ export class CardReward extends LitElement {
                 @input="${this.handleContributionAmount}"
               />
             </div>
+            `}
           </div>
         </div>
         <footer class="card-footer ${this.openStatus ? '' : 'is-hidden'}">

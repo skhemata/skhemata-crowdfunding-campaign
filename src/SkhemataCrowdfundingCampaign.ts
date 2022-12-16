@@ -16,6 +16,7 @@ import { campaignInfo } from './campaignInfo';
 import { campaignFaq } from './campaignFaq';
 import { campaignBackers } from './campaignBackers';
 import { CampaignContribution } from './CampaignContribution';
+import { Menu } from './components/Menu';
 
 export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   static get styles() {
@@ -38,9 +39,23 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         }
 
         .headerContainer {
-          text-align: center;
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
           margin-bottom: 1rem;
+          text-align: center;
+          align-items: center;
         }
+
+        .headerWrapper {
+          grid-column: 2 / 3;
+        }
+
+        .menuWrapper {
+          grid-column: 3 / 4;
+          /* text-align: right; */
+          justify-self: flex-end;
+        }
+
       `,
     ];
   }
@@ -51,12 +66,15 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       'campaign-faq': campaignFaq,
       'campaign-backers': campaignBackers,
       'campaign-contribution': CampaignContribution,
+      'menu-component': Menu,
     };
   }
 
   @property({ type: String, attribute: 'api_url' }) apiUrl?: string;
 
   @property({ type: String, attribute: 'loc_path' }) locPath?: string;
+
+  @property({ type: String, attribute: 'api_full' }) apiFull?: string;
 
   @property({ type: String, attribute: 'campaign_id' }) campaignId?: number;
 
@@ -72,6 +90,12 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     await super.firstUpdated();
     this.getCampaign();
     this.tabEvent();
+
+    if(this.apiUrl && this.locPath) {
+      this.apiFull = this.apiUrl + this.locPath;
+    } else {
+      this.apiFull = '';
+    }
   }
 
   handleContribute = () => {
@@ -82,23 +106,30 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     this.currentPage = '';
   };
 
-  render() {
+  render() {  
     if (this.currentPage === 'contribution') {
       return html`<campaign-contribution
         .currentPage="${this.currentPage}"
         .handleBack="${this.handleBack}"
         .campaign="${this.campaign}"
+        .apiFull = "${this.apiFull}"
       ></campaign-contribution>`;
     }
 
     return html`
     <div class="container">
       <div class="headerContainer">
+        <!-- <div></div> -->
+        <div class="headerWrapper">
           <div class="header"> 
             <h1>${this.campaign?.name}</h1>
           </div>
           <div>by <b>${this.campaign?.managers[0].first_name} ${this.campaign?.managers[0].last_name}</b>
           </div>
+        </div>
+        <div class="menuWrapper">
+          <menu-component .apiFull="${this.apiFull}"></menu-component>
+        </div>
       </div>
         <div class="tabs">
           <ul id="tabs">

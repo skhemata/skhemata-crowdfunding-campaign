@@ -35,6 +35,7 @@ export class campaignInfo extends SkhemataBase {
         }
         .start-end-time {
           border-radius: 5px;
+          padding: .5rem;
         }
 
         .rewards-section {
@@ -225,6 +226,82 @@ export class campaignInfo extends SkhemataBase {
     }
   };
 
+  getRaisedInPeriod = () => {
+    let returnDate = {
+      "unit": "",
+      "elapsed": 0
+    };
+    let elapsedSecond = this.campaign?.seconds_elapsed;
+    let elapsedMinute = elapsedSecond / 60;
+    let elapsedHour = elapsedMinute / 60;
+    let elapsedDay = elapsedHour / 24;
+    let elapsedMonth = elapsedDay / 30;
+    let elapsedYear = elapsedMonth / 12;
+
+    if (elapsedYear >= 1) {
+      returnDate.elapsed = Math.floor(elapsedYear);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "years";
+      }
+      else {
+        returnDate.unit = "year";
+      }
+    }
+    else if (elapsedMonth >= 1) {
+      returnDate.elapsed = Math.floor(elapsedMonth);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "months";
+      }
+      else {
+        returnDate.unit = "month";
+      }
+    }
+    else if (elapsedDay >= 1) {
+      returnDate.elapsed = Math.floor(elapsedDay);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "days";
+      }
+      else {
+        returnDate.unit = "day";
+      }
+    }
+    else if (elapsedHour >= 1) {
+      returnDate.elapsed = Math.floor(elapsedHour);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "hours";
+      }
+      else {
+        returnDate.unit = "hour";
+      }
+    }
+    else if (elapsedMinute >= 1) {
+      returnDate.elapsed = Math.floor(elapsedMinute);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "minutes";
+      }
+      else {
+        returnDate.unit = "minute";
+      }
+    }
+    else if (elapsedSecond >= 1) {
+      returnDate.elapsed = Math.floor(elapsedSecond);
+      if (returnDate.elapsed > 1) {
+        returnDate.unit = "seconds";
+      }
+      else {
+        returnDate.unit = "second";
+      }
+    }
+
+    return returnDate;
+  }
+
+  addCurrencySymbols = (amount: string) => {
+    const currencySymbol = this.currencySymbols[this.campaign?.currencies[0].code_iso4217_alpha];
+    const currencyName = this.campaign?.currencies[0].code_iso4217_alpha
+    return `${currencySymbol}${amount} ${currencyName}`;
+  }
+
   render() {
     return html`
       <div class="columns">
@@ -277,18 +354,15 @@ export class campaignInfo extends SkhemataBase {
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${this.currencySymbols[
-                this.campaign?.currencies[0].code_iso4217_alpha
-              ]}${this.campaign?.funded_amount}
-              ${this.campaign?.currencies[0].code_iso4217_alpha}</span
+              >${this.addCurrencySymbols(this.campaign?.funded_amount)}</span
             >
-            Raised in ${this.campaign?.days_elapsed} days
+            Raised in ${this.getRaisedInPeriod().elapsed} ${this.getRaisedInPeriod().unit}
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
               >${this.campaign?.funded_percentage}%</span
             >
-            of ${this.campaign?.funding_goal}
+            Funded of <b>${this.addCurrencySymbols(this.campaign?.funding_goal)}</b> Goal 
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"

@@ -5,7 +5,24 @@ import { property } from 'lit/decorators.js';
 import { Bulma } from '@skhemata/skhemata-css';
 
 export class CreateAccountContribution extends LitElement {
-  static styles = <CSSResult[]>[Bulma, css``];
+  static styles = <CSSResult[]>[Bulma, css`
+    .formWrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .formWrapper div {
+      width: 100%;
+    }
+
+    .double-box-wrapper {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+    }
+  `];
 
   @property({ type: Boolean }) submitDisabled = false;
 
@@ -13,24 +30,29 @@ export class CreateAccountContribution extends LitElement {
 
   //   }
 
+  handleCreateAccount = async () => {
+    console.log('Create Account');
+    
+  }
+
   render() {
     return html`
-      <div class="field">
-        <div class="control">
+      <div class="field formWrapper">
+        <div class="control double-box-wrapper">
           <input class="input" type="text" placeholder="First Name" />
-        </div>
-        <div class="control">
           <input class="input" type="text" placeholder="Last Name" />
         </div>
         <div class="control">
           <input class="input" type="email" placeholder="Email" />
         </div>
-        <div class="control">
+        <div class="control double-box-wrapper">
           <input class="input" type="password" placeholder="Password" />
-        </div>
-        <div class="control">
           <input class="input" type="password" placeholder="Confirm Password" />
         </div>
+
+        <button class="button" @click="${this.handleCreateAccount}">
+          Create Account
+        </button>
       </div>
     `;
   }
