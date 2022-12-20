@@ -82,6 +82,11 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
   @property({ type: Object }) campaign?: any;
 
+  @property({ type: Boolean }) authState = false;
+
+  @property({ type: Object })
+  stripeInfoPublishableKey = '';
+
   /**
    * Implement firstUpdated to perform one-time work after
    * the element’s template has been created.
@@ -106,8 +111,50 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     this.currentPage = '';
   };
 
+
+  handleAuthStateChange = () => {
+    const authToken = window.localStorage.getItem('skhemataToken');
+
+    if (authToken !== null) {
+      this.authState = true;
+      this.getStripeKeys();
+    } else {
+      this.authState = false;
+    }
+    this.requestUpdate();
+  }
+
+  getStripeKeys = async () => {
+    const authToken = window.localStorage.getItem('skhemataToken');
+
+    // StripeInfo
+    if(this.authState) {
+      try {
+        const response = await fetch(
+          `${this.apiFull}account/stripe/application`,
+          {
+            // credentials: 'include',
+            headers: {
+              'X-Auth-Token': authToken || '',
+            },
+          }
+        );
+        const data = await response.json();
+        console.log('stripe keys: ', data);
+        
+        // this.stripeInfo.secret_key = data.secret_key;
+        this.stripeInfoPublishableKey = data.publishable_key;
+        // this.stripeInfo.country_id = data.country_id;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+
+
   render() {  
-    console.log(this.apiFull);
+    console.log('main: ', this.stripeInfoPublishableKey);
     
     if (this.currentPage === 'contribution') {
       return html`<campaign-contribution
@@ -115,6 +162,10 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         .handleBack="${this.handleBack}"
         .campaign="${this.campaign}"
         .apiFull = "${this.apiFull}"
+        .authState="${this.authState}"
+        .stripeInfoPublishableKey="${this.stripeInfoPublishableKey}"
+        .handleAuthStateChange="${this.handleAuthStateChange}"
+        .getStripeKeys="${this.getStripeKeys}"
       ></campaign-contribution>`;
     }
 
@@ -130,7 +181,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </div>
         </div>
         <div class="menuWrapper">
-          <menu-component .apiFull="${this.apiFull}"></menu-component>
+          <menu-component .authState="${this.authState}" .handleAuthStateChange="${this.handleAuthStateChange}" .apiFull="${this.apiFull}"></menu-component>
         </div>
       </div>
         <div class="tabs">

@@ -161,12 +161,7 @@ export class CampaignContribution extends SkhemataBase {
   //   return {
   //   };
   // }
-  @property({ type: Object })
-  stripeInfo = {
-    secret_key: '',
-    publishable_key: '',
-    country_id: 0,
-  };
+ 
 
   @property({ type: Object })
   contributionObj = {
@@ -335,7 +330,9 @@ export class CampaignContribution extends SkhemataBase {
 
   @property({ type: Boolean }) loadingState = false;
 
-  @property({ type: Boolean }) authState = false;
+  @property({ type: Boolean }) authState: boolean | undefined;
+
+  @property({ type: String }) stripeInfoPublishableKey: string | undefined;
 
   @property({ type: Number }) contributionAmount = 1;
 
@@ -343,6 +340,13 @@ export class CampaignContribution extends SkhemataBase {
 
   @property({ type: Boolean })
   openStatus = true;
+
+  @property({ type: Function })
+  handleAuthStateChange!: () => void;
+
+  @property({ type: Function })
+  getStripeKeys!: () => void;
+
 
   /**
    * Implement firstUpdated to perform one-time work after
@@ -352,7 +356,7 @@ export class CampaignContribution extends SkhemataBase {
   async firstUpdated() {
     await super.firstUpdated();
     this.handleAuthStateChange();
-    await this.getStripeKeys();
+    this.getStripeKeys();
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
     this.initStripe();
   }
@@ -362,8 +366,8 @@ export class CampaignContribution extends SkhemataBase {
   };
 
   initStripe() {
-    if (window.Stripe && this.authState) {
-      const stripe: any = window.Stripe(this.stripeInfo.publishable_key);
+    if (window.Stripe && this.authState && this.stripeInfoPublishableKey) {
+      const stripe: any = window.Stripe(this.stripeInfoPublishableKey);
       this.stripe = stripe;
       
     } else {
@@ -371,42 +375,42 @@ export class CampaignContribution extends SkhemataBase {
     }
   }
 
-  handleAuthStateChange = () => {
-    const authToken = window.localStorage.getItem('skhemataToken');
+  // handleAuthStateChange = () => {
+  //   const authToken = window.localStorage.getItem('skhemataToken');
 
-    if (authToken !== null) {
-      this.authState = true;
-      this.getStripeKeys();
-    } else {
-      this.authState = false;
-    }
-    this.requestUpdate();
-  }
+  //   if (authToken !== null) {
+  //     this.authState = true;
+  //     this.getStripeKeys();
+  //   } else {
+  //     this.authState = false;
+  //   }
+  //   this.requestUpdate();
+  // }
 
-  getStripeKeys = async () => {
-    const authToken = window.localStorage.getItem('skhemataToken');
+  // getStripeKeys = async () => {
+  //   const authToken = window.localStorage.getItem('skhemataToken');
 
-    // StripeInfo
-    if(this.authState) {
-      try {
-        const response = await fetch(
-          `${this.apiFull}account/stripe/application`,
-          {
-            // credentials: 'include',
-            headers: {
-              'X-Auth-Token': authToken || '',
-            },
-          }
-        );
-        const data = await response.json();
-        this.stripeInfo.secret_key = data.secret_key;
-        this.stripeInfo.publishable_key = data.publishable_key;
-        this.stripeInfo.country_id = data.country_id;
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  };
+  //   // StripeInfo
+  //   if(this.authState) {
+  //     try {
+  //       const response = await fetch(
+  //         `${this.apiFull}account/stripe/application`,
+  //         {
+  //           // credentials: 'include',
+  //           headers: {
+  //             'X-Auth-Token': authToken || '',
+  //           },
+  //         }
+  //       );
+  //       const data = await response.json();
+  //       this.stripeInfo.secret_key = data.secret_key;
+  //       this.stripeInfoPublishableKey = data.publishable_key;
+  //       this.stripeInfo.country_id = data.country_id;
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  // };
 
   handleContribution = async () => {
     // https://stripe.com/docs/payments/quickstart
@@ -630,6 +634,8 @@ export class CampaignContribution extends SkhemataBase {
   // https://stripe.com/docs/payments/quickstart
 
   render() {
+    console.log('contribution: ', this.stripeInfoPublishableKey);
+
     return html`<div class="container">
       <div>
         <campaign-profile .campaign=${this.campaign}></campaign-profile>
@@ -668,8 +674,7 @@ export class CampaignContribution extends SkhemataBase {
                     <div class="control">
                       <skhemata-form-stripe
                         id="skhemata-form-stripe"
-                        .publishableKey=${this.stripeInfo.publishable_key}
-                        .clientSecret=${this.stripeInfo.secret_key}
+                        .publishableKey=${this.stripeInfoPublishableKey}
                         .contributionSk=${this.contributionObj.secret_key}
                         .contributionId=${this.contributionObj.id}
                         .confirmInfo=${this.contributionObj.confirmInfo}
