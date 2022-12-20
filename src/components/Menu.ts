@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable lit-a11y/anchor-is-valid */
 /* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable import/no-extraneous-dependencies */
@@ -32,48 +33,75 @@ export class Menu extends SkhemataBase {
     `,
   ];
 
-  @property({ type: String, attribute: 'api_full' }) apiFull?: string;
+  @property({ type: String }) apiFull: string | undefined;
 
-  @property({ type: Boolean }) authState = false;
+  @property({ type: Object }) userData = {
+    email: '',
+    first_name: '',
+    last_name: '',
+  };
+
+  @property({ type: Boolean }) authState: boolean | undefined;
 
   @property({ type: Function })
   handleAuthStateChange!: () => void;
 
-//   async firstUpdated() {}
 
+  async firstUpdated() {
+    await super.firstUpdated();
+    await this.loadUser();
+  }
+
+
+  loadUser = async () => {
+    const url = `${this.apiFull}authenticate`;
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auth-token': `${window.localStorage.getItem('skhemataToken')}`,
+      },
+    });
+    const data = await res.json();
+    const { first_name, last_name, email } = data;
+    
+    this.userData = {
+      first_name,
+      last_name,
+      email,
+    };
+  }
 
 
 
  // logout
- handleLogout = () => {
-  const url = `${this.apiFull}logout`;
-  
+  handleLogout = () => {
+    const url = `${this.apiFull}logout`;
+    
     fetch(url, {
       method: 'POST',
-      // credentials: 'include',
-      // mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
       },
     })
-      .then(response => {
-        console.log(response);
+      .then(() => {
         window.localStorage.removeItem('skhemataToken');
         this.handleAuthStateChange();
         this.requestUpdate();
-        // window.location.reload();
       })
       .catch(e => console.log(e));
   };
 
   render() {
-    console.log('Manu api full: ', this.apiFull);
     
     return html`
       <div class="dropdown is-hoverable menuDropdown">
         <div class="dropdown-trigger">
             <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
-                <span>Settings</span>
+                <span>${this.userData.first_name}</span>
                 <span class="icon is-small">
                 <svg
                     viewbox="0 0 10 6"
@@ -92,7 +120,7 @@ export class Menu extends SkhemataBase {
         <div class="dropdown-menu" id="dropdown-menu4" role="menu">
             <div class="dropdown-content">
             <div class="dropdown-item">
-                <a href="#">Profile</a>
+                <a>Profile</a>
             </div>
             <div class="dropdown-item">
                 <a @click="${this.handleLogout}">Log Out</a>

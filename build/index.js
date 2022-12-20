@@ -13412,7 +13412,9 @@ class CardReward extends s$3 {
     this.contributionAmount = 0;
     this.handleRewardOpen = () => {
       this.openStatus = !this.openStatus;
-      this.handleChosenReward(this.pledge.name, this.pledge);
+      if (this.handleChosenReward !== undefined) {
+        this.handleChosenReward(this.pledge.name, this.pledge);
+      }
     };
   }
   async firstUpdated() {
@@ -13420,7 +13422,6 @@ class CardReward extends s$3 {
   }
   render() {
     var _a, _b;
-    console.log(this.pledge);
     return y`
       <div class="card cardReward">
         <header class="card-header" @click="${this.handleRewardOpen}">
@@ -13440,10 +13441,13 @@ class CardReward extends s$3 {
           <div class="content">
             ${this.pledge.description}
 
-            <br />
-            <time datetime="2016-1-1">${this.pledge.created}</time>
+            <div class="pledge-date">
+              <time datetime="2016-1-1">Created: ${new Date(this.pledge.created).toDateString()}</time>
+            </div>
 
+            ${this.handleChosenReward === undefined ? y`` : y`
             <div>
+              <label class="label">Contribution Amount</label>
               <input
                 min="1"
                 class="input"
@@ -13453,6 +13457,7 @@ class CardReward extends s$3 {
                 @input="${this.handleContributionAmount}"
               />
             </div>
+            `}
           </div>
         </div>
         <footer class="card-footer ${this.openStatus ? '' : 'is-hidden'}">
@@ -13473,6 +13478,22 @@ CardReward.styles = [Bulma, i`
       .cardReward header {
         cursor: pointer;
       }
+
+      /* Chrome, Safari, Edge, Opera */
+      input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        .pledge-date {
+          margin: 1rem 0;
+        }
     `];
 __decorate([e$4({
   type: Object,
@@ -13632,6 +13653,69 @@ class campaignInfo extends SkhemataBase {
         this.activeRewards = newArr;
       }
     };
+    this.getRaisedInPeriod = () => {
+      var _a;
+      let returnDate = {
+        "unit": "",
+        "elapsed": 0
+      };
+      let elapsedSecond = (_a = this.campaign) === null || _a === void 0 ? void 0 : _a.seconds_elapsed;
+      let elapsedMinute = elapsedSecond / 60;
+      let elapsedHour = elapsedMinute / 60;
+      let elapsedDay = elapsedHour / 24;
+      let elapsedMonth = elapsedDay / 30;
+      let elapsedYear = elapsedMonth / 12;
+      if (elapsedYear >= 1) {
+        returnDate.elapsed = Math.floor(elapsedYear);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "years";
+        } else {
+          returnDate.unit = "year";
+        }
+      } else if (elapsedMonth >= 1) {
+        returnDate.elapsed = Math.floor(elapsedMonth);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "months";
+        } else {
+          returnDate.unit = "month";
+        }
+      } else if (elapsedDay >= 1) {
+        returnDate.elapsed = Math.floor(elapsedDay);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "days";
+        } else {
+          returnDate.unit = "day";
+        }
+      } else if (elapsedHour >= 1) {
+        returnDate.elapsed = Math.floor(elapsedHour);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "hours";
+        } else {
+          returnDate.unit = "hour";
+        }
+      } else if (elapsedMinute >= 1) {
+        returnDate.elapsed = Math.floor(elapsedMinute);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "minutes";
+        } else {
+          returnDate.unit = "minute";
+        }
+      } else if (elapsedSecond >= 1) {
+        returnDate.elapsed = Math.floor(elapsedSecond);
+        if (returnDate.elapsed > 1) {
+          returnDate.unit = "seconds";
+        } else {
+          returnDate.unit = "second";
+        }
+      }
+      return returnDate;
+    };
+    this.addCurrencySymbols = amount => {
+      var _a, _b;
+      const currencySymbol = this.currencySymbols[(_a = this.campaign) === null || _a === void 0 ? void 0 : _a.currencies[0].code_iso4217_alpha];
+      const currencyName = (_b = this.campaign) === null || _b === void 0 ? void 0 : _b.currencies[0].code_iso4217_alpha;
+      return `${currencySymbol}${amount} ${currencyName}`;
+    };
   }
   static get styles() {
     return [...super.styles, i`
@@ -13649,10 +13733,11 @@ class campaignInfo extends SkhemataBase {
           /* text-align: center; */
         }
         .right-info > div {
-          margin-bottom: 30px;
+          margin-bottom: 2rem;
         }
         .start-end-time {
           border-radius: 5px;
+          padding: .5rem;
         }
 
         .rewards-section {
@@ -13663,6 +13748,10 @@ class campaignInfo extends SkhemataBase {
 
         .campaign-description {
           margin-top: 20px;
+        }
+
+        #campaignProgress {
+          margin-bottom: 0.5rem;
         }
       `];
   }
@@ -13688,7 +13777,7 @@ class campaignInfo extends SkhemataBase {
     this.getCampaignMainImage();
   }
   render() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     return y`
       <div class="columns">
         <div class="left-info column">
@@ -13732,32 +13821,33 @@ class campaignInfo extends SkhemataBase {
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${(_b = this.campaign) === null || _b === void 0 ? void 0 : _b.total_backers}</span
+              >${this.addCurrencySymbols((_b = this.campaign) === null || _b === void 0 ? void 0 : _b.funded_amount)}</span
             >
-            ${((_c = this.campaign) === null || _c === void 0 ? void 0 : _c.total_backers) === 1 ? 'Backer' : 'Backers'}
+            Raised in ${this.getRaisedInPeriod().elapsed} ${this.getRaisedInPeriod().unit}
+          </div>
+          <div>
+            <progress class="progress is-info" id="campaignProgress" value="${(_c = this.campaign) === null || _c === void 0 ? void 0 : _c.funded_percentage}" max="100">${(_d = this.campaign) === null || _d === void 0 ? void 0 : _d.funded_percentage}%</progress>
+            
+            <span class="campaign-info-highlight has-text-info"
+              >${(_e = this.campaign) === null || _e === void 0 ? void 0 : _e.funded_percentage}%</span
+            >
+            Funded of <b>${this.addCurrencySymbols((_f = this.campaign) === null || _f === void 0 ? void 0 : _f.funding_goal)}</b> Goal 
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${this.currencySymbols[(_d = this.campaign) === null || _d === void 0 ? void 0 : _d.currencies[0].code_iso4217_alpha]}${(_e = this.campaign) === null || _e === void 0 ? void 0 : _e.funded_amount}
-              ${(_f = this.campaign) === null || _f === void 0 ? void 0 : _f.currencies[0].code_iso4217_alpha}</span
+              >${(_g = this.campaign) === null || _g === void 0 ? void 0 : _g.total_backers}</span
             >
-            Raised in ${(_g = this.campaign) === null || _g === void 0 ? void 0 : _g.days_elapsed} days
+            ${((_h = this.campaign) === null || _h === void 0 ? void 0 : _h.total_backers) === 1 ? 'Backer' : 'Backers'}
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${(_h = this.campaign) === null || _h === void 0 ? void 0 : _h.funded_percentage}%</span
-            >
-            of ${(_j = this.campaign) === null || _j === void 0 ? void 0 : _j.funding_goal}
-          </div>
-          <div>
-            <span class="campaign-info-highlight has-text-info"
-              >${(_k = this.campaign) === null || _k === void 0 ? void 0 : _k.days_remaining}
-              ${((_l = this.campaign) === null || _l === void 0 ? void 0 : _l.days_remaining) === 1 ? 'Day to go' : 'Days to go'}</span
+              >${(_j = this.campaign) === null || _j === void 0 ? void 0 : _j.days_remaining}
+              ${((_k = this.campaign) === null || _k === void 0 ? void 0 : _k.days_remaining) === 1 ? 'Day to go' : 'Days to go'}</span
             >
           </div>
           <div class="start-end-time has-background-grey-lighter">
-            <div>Started on ${(_m = this.campaign) === null || _m === void 0 ? void 0 : _m.starts_date_time}</div>
-            <div>Ends on ${(_o = this.campaign) === null || _o === void 0 ? void 0 : _o.ends_date_time}</div>
+            <div>Started on ${(_l = this.campaign) === null || _l === void 0 ? void 0 : _l.starts_date_time}</div>
+            <div>Ends on ${(_m = this.campaign) === null || _m === void 0 ? void 0 : _m.ends_date_time}</div>
           </div>
 
           <div>
@@ -13767,7 +13857,7 @@ class campaignInfo extends SkhemataBase {
           </div>
 
           <div class="rewards-section">
-            ${((_p = this.campaign) === null || _p === void 0 ? void 0 : _p.pledges) && ((_q = this.campaign) === null || _q === void 0 ? void 0 : _q.pledges.length) > 0 ? this.campaign.pledges.map(pledge => y`
+            ${((_o = this.campaign) === null || _o === void 0 ? void 0 : _o.pledges) && ((_p = this.campaign) === null || _p === void 0 ? void 0 : _p.pledges.length) > 0 ? this.campaign.pledges.map(pledge => y`
                     <card-reward-component
                       .pledge=${pledge}
                       .handleContribute=${this.handleContribute}
@@ -15482,25 +15572,28 @@ class LoginContribution extends s$3 {
     //   firstUpdated() {}
     this.handleLogin = async () => {
       var _a, _b;
-      const email = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('input[type="email"]');
-      const password = (_b = this.shadowRoot) === null || _b === void 0 ? void 0 : _b.querySelector('input[type="password"]');
-      if (email.value && password.value) {
-        const info = {
-          email: email.value,
-          password: password.value
-        };
-        console.log('INFO: ', info);
-        const res = await loginRequest('/authenticate', 'POST', info);
-        const data = await res.json();
-        window.localStorage.setItem('skhemataToken', data.auth_token);
-        console.log(data);
-        this.requestUpdate();
+      if (this.shadowRoot) {
+        const email = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('input[type="email"]');
+        const password = (_b = this.shadowRoot) === null || _b === void 0 ? void 0 : _b.querySelector('input[type="password"]');
+        if (email.value && password.value) {
+          const info = {
+            email: email.value,
+            password: password.value
+          };
+          const res = await loginRequest('/authenticate', 'POST', info);
+          const data = await res.json();
+          if (data.auth_token !== undefined) {
+            window.localStorage.setItem('skhemataToken', data.auth_token);
+          }
+          this.handleAuthStateChange();
+          this.requestUpdate();
+        }
       }
     };
   }
   render() {
     return y`
-      <div class="field">
+      <div class="field formWrapper">
         <div class="control">
           <input class="input" type="email" placeholder="Email" />
         </div>
@@ -15509,50 +15602,122 @@ class LoginContribution extends s$3 {
         </div>
 
         <button class="button" @click="${this.handleLogin}">
-          Login and Contribute
+          Login
         </button>
       </div>
     `;
   }
 }
-LoginContribution.styles = [Bulma, i``];
+LoginContribution.styles = [Bulma, i`
+    .formWrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .formWrapper div {
+      width: 100%;
+    }
+  `];
 __decorate([e$4({
   type: Boolean
 })], LoginContribution.prototype, "submitDisabled", void 0);
+__decorate([e$4({
+  type: Boolean
+})], LoginContribution.prototype, "authState", void 0);
+__decorate([e$4({
+  type: Function
+})], LoginContribution.prototype, "handleAuthStateChange", void 0);
 
 class CreateAccountContribution extends s$3 {
   constructor() {
     super(...arguments);
     this.submitDisabled = false;
+    this.authState = false;
+    //   firstUpdated() {
+    //   }
+    this.handleCreateAccount = async () => {
+      var _a, _b, _c, _d, _e;
+      if (this.shadowRoot) {
+        const firstName = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('firstName');
+        const lastName = (_b = this.shadowRoot) === null || _b === void 0 ? void 0 : _b.getElementById('lastName');
+        const email = (_c = this.shadowRoot) === null || _c === void 0 ? void 0 : _c.getElementById('email');
+        const password = (_d = this.shadowRoot) === null || _d === void 0 ? void 0 : _d.getElementById('password');
+        const confirmPassword = (_e = this.shadowRoot) === null || _e === void 0 ? void 0 : _e.getElementById('confirmPassword');
+        if (email.value && password.value && firstName.value && lastName.value && password.value === confirmPassword.value) {
+          const info = {
+            email: email.value,
+            first_name: firstName.value,
+            inline_registration: true,
+            last_name: lastName.value,
+            password: password.value,
+            password_confirm: confirmPassword.value
+          };
+          const res = await loginRequest('/register', 'POST', info);
+          const data = await res.json();
+          if (data.auth_token !== undefined) {
+            window.localStorage.setItem('skhemataToken', data.auth_token);
+          }
+          this.handleAuthStateChange();
+          this.requestUpdate();
+        } else if (password.value !== confirmPassword.value) {
+          console.log('Passwords do not match');
+        } else {
+          console.log('Please fill out all fields');
+        }
+      }
+    };
   }
-  //   firstUpdated() {
-  //   }
   render() {
     return y`
-      <div class="field">
-        <div class="control">
-          <input class="input" type="text" placeholder="First Name" />
+      <div class="field formWrapper">
+        <div class="control double-box-wrapper">
+          <input class="input" type="text" id="firstName" placeholder="First Name" />
+          <input class="input" type="text" id="lastName" placeholder="Last Name" />
         </div>
         <div class="control">
-          <input class="input" type="text" placeholder="Last Name" />
+          <input class="input" type="email" id="email" placeholder="Email" />
         </div>
-        <div class="control">
-          <input class="input" type="email" placeholder="Email" />
+        <div class="control double-box-wrapper">
+          <input class="input" type="password" id="password" placeholder="Password" />
+          <input class="input" type="password" id="confirmPassword" placeholder="Confirm Password" />
         </div>
-        <div class="control">
-          <input class="input" type="password" placeholder="Password" />
-        </div>
-        <div class="control">
-          <input class="input" type="password" placeholder="Confirm Password" />
-        </div>
+
+        <button class="button" @click="${this.handleCreateAccount}">
+          Create Account
+        </button>
       </div>
     `;
   }
 }
-CreateAccountContribution.styles = [Bulma, i``];
+CreateAccountContribution.styles = [Bulma, i`
+    .formWrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .formWrapper div {
+      width: 100%;
+    }
+
+    .double-box-wrapper {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+    }
+  `];
 __decorate([e$4({
   type: Boolean
 })], CreateAccountContribution.prototype, "submitDisabled", void 0);
+__decorate([e$4({
+  type: Boolean
+})], CreateAccountContribution.prototype, "authState", void 0);
+__decorate([e$4({
+  type: Function
+})], CreateAccountContribution.prototype, "handleAuthStateChange", void 0);
 
 class ExpressCheckoutContribution extends s$3 {
   constructor() {
@@ -15563,24 +15728,156 @@ class ExpressCheckoutContribution extends s$3 {
   //   }
   render() {
     return y`
-      <div class="field">
-        <div class="control">
+      <div class="field formWrapper">
+        <div class="control double-box-wrapper">
           <input class="input" type="text" placeholder="First Name" />
-        </div>
-        <div class="control">
           <input class="input" type="text" placeholder="Last Name" />
         </div>
         <div class="control">
           <input class="input" type="email" placeholder="Email" />
         </div>
+
+        <button class="button">
+          Express Checkout
+        </button>
       </div>
     `;
   }
 }
-ExpressCheckoutContribution.styles = [Bulma, i``];
+ExpressCheckoutContribution.styles = [Bulma, i`
+    .formWrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .formWrapper div {
+      width: 100%;
+    }
+
+    .double-box-wrapper {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+    }
+  `];
 __decorate([e$4({
   type: Boolean
 })], ExpressCheckoutContribution.prototype, "submitDisabled", void 0);
+
+class Menu extends SkhemataBase {
+  constructor() {
+    super(...arguments);
+    this.userData = {
+      email: '',
+      first_name: '',
+      last_name: ''
+    };
+    this.loadUser = async () => {
+      const url = `${this.apiFull}authenticate`;
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': `${window.localStorage.getItem('skhemataToken')}`
+        }
+      });
+      const data = await res.json();
+      const {
+        first_name,
+        last_name,
+        email
+      } = data;
+      this.userData = {
+        first_name,
+        last_name,
+        email
+      };
+    };
+    // logout
+    this.handleLogout = () => {
+      const url = `${this.apiFull}logout`;
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).then(() => {
+        window.localStorage.removeItem('skhemataToken');
+        this.handleAuthStateChange();
+        this.requestUpdate();
+      }).catch(e => console.log(e));
+    };
+  }
+  async firstUpdated() {
+    await super.firstUpdated();
+    await this.loadUser();
+  }
+  render() {
+    return y`
+      <div class="dropdown is-hoverable menuDropdown">
+        <div class="dropdown-trigger">
+            <button class="button" aria-haspopup="true" aria-controls="dropdown-menu4">
+                <span>${this.userData.first_name}</span>
+                <span class="icon is-small">
+                <svg
+                    viewbox="0 0 10 6"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="width: 12px; height: 12px"
+                >
+                    <path
+                    d="M9.08329 0.666626C8.74996 0.333293 8.24996 0.333293 7.91663 0.666626L4.99996 3.58329L2.08329 0.666626C1.74996 0.333293 1.24996 0.333293 0.916626 0.666626C0.583293 0.999959 0.583293 1.49996 0.916626 1.83329L4.41663 5.33329C4.58329 5.49996 4.74996 5.58329 4.99996 5.58329C5.24996 5.58329 5.41663 5.49996 5.58329 5.33329L9.08329 1.83329C9.41663 1.49996 9.41663 0.999959 9.08329 0.666626Z"
+                    fill="currentColor"
+                    ></path>
+                </svg>
+                </span>
+            </button>
+        </div>
+        <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+            <div class="dropdown-content">
+            <div class="dropdown-item">
+                <a>Profile</a>
+            </div>
+            <div class="dropdown-item">
+                <a @click="${this.handleLogout}">Log Out</a>
+            </div>
+            </div>
+        </div>
+    </div>
+    `;
+  }
+}
+Menu.styles = [Bulma, i`
+        
+        .menuDropdown .dropdown-trigger button,
+        .menuDropdown .dropdown-trigger button:focus {
+          background: none;
+          border: none;
+          padding: 0;
+          text-align: left;
+          outline: none;
+        }
+        .menuDropdown .dropdown-content {
+          width: 60%;
+          text-align: left;
+        }
+    `];
+__decorate([e$4({
+  type: String
+})], Menu.prototype, "apiFull", void 0);
+__decorate([e$4({
+  type: Object
+})], Menu.prototype, "userData", void 0);
+__decorate([e$4({
+  type: Boolean
+})], Menu.prototype, "authState", void 0);
+__decorate([e$4({
+  type: Function
+})], Menu.prototype, "handleAuthStateChange", void 0);
 
 class CampaignProfile extends s$3 {
   constructor() {
@@ -15589,6 +15886,11 @@ class CampaignProfile extends s$3 {
     //   async firstUpdated() {}
     this.handleRewardOpen = () => {
       this.openStatus = !this.openStatus;
+    };
+  }
+  static get scopedElements() {
+    return {
+      'menu-component': Menu
     };
   }
   render() {
@@ -15612,6 +15914,9 @@ class CampaignProfile extends s$3 {
                 ${(_d = this.campaign) === null || _d === void 0 ? void 0 : _d.managers[0].last_name}</b
               >
             </span>
+          </div>
+          <div class="campaign-info-menuWrapper">
+            <menu-component></menu-component>
           </div>
         </div>
       </div>
@@ -15663,6 +15968,82 @@ __decorate([e$4({
 __decorate([e$4({
   type: Object
 })], CampaignProfile.prototype, "campaign", void 0);
+
+class CardInfo extends SkhemataBase {
+  constructor() {
+    super(...arguments);
+    //   async firstUpdated() {}
+    this.handleNameOnCardChange = e => {
+      this.nameOnCard = e.target.value;
+    };
+  }
+  static get scopedElements() {
+    return {
+      // 'menu-component': Menu,
+    };
+  }
+  render() {
+    return y`
+        <div class="field cardInformaionWrapper">
+            
+            <h3 class="title">Card Information</h3>
+
+            <div class="reward-section-box">
+                <div class="control">
+                    <input
+                    class="input ${this.nameOnCardError ? "is-danger" : ""}"
+                    type="text"
+                    placeholder="Name on Card"
+                    @change="${this.handleNameOnCardChange}"
+                    />
+                    ${this.nameOnCardError ? y`<p class="help is-danger">${this.nameOnCardError}</p>` : y``}
+                </div>
+
+                <div class="control trible-box-wrapper">
+                    <input
+                        class="input"
+                        type="text"
+                        placeholder="Credit Card Number"
+                    />
+                    <input
+                        class="input"
+                        type="text"
+                        placeholder="MM/YY"
+                    />
+                    <input
+                        class="input"
+                        type="text"
+                        placeholder="CVC"
+                    />
+                </div>
+            </div>
+        </div>
+    `;
+  }
+}
+CardInfo.styles = [Bulma, i`
+        .cardInformaionWrapper {
+            margin-top: 3rem;
+        }
+
+        .trible-box-wrapper {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+        }
+    
+    `];
+__decorate([e$4({
+  type: Object
+})], CardInfo.prototype, "campaign", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'nameOnCard'
+})], CardInfo.prototype, "nameOnCard", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'nameOnCardError'
+})], CardInfo.prototype, "nameOnCardError", void 0);
 
 class CampaignContribution extends SkhemataBase {
   constructor() {
@@ -15808,112 +16189,144 @@ class CampaignContribution extends SkhemataBase {
     };
     this.currentTab = 'Login';
     this.submitDisabled = false;
+    this.loadingState = false;
     this.authState = false;
     this.contributionAmount = 1;
     this.openStatus = true;
     this.handleRewardOpen = () => {
       this.openStatus = !this.openStatus;
     };
+    this.handleAuthStateChange = () => {
+      const authToken = window.localStorage.getItem('skhemataToken');
+      if (authToken !== null) {
+        this.authState = true;
+        this.getStripeKeys();
+      } else {
+        this.authState = false;
+      }
+      this.requestUpdate();
+    };
     this.getStripeKeys = async () => {
       const authToken = window.localStorage.getItem('skhemataToken');
-      console.log('authToken', authToken);
       // StripeInfo
-      try {
-        const response = await fetch('https://coral.thrinacia.com/api/service/restv1/account/stripe/application', {
-          // credentials: 'include',
-          headers: {
-            'X-Auth-Token': authToken || ''
-          }
-        });
-        const data = await response.json();
-        this.stripeInfo.secret_key = data.secret_key;
-        this.stripeInfo.publishable_key = data.publishable_key;
-        this.stripeInfo.country_id = data.country_id;
-      } catch (error) {
-        console.log(error);
+      if (this.authState) {
+        try {
+          const response = await fetch(`${this.apiFull}account/stripe/application`, {
+            // credentials: 'include',
+            headers: {
+              'X-Auth-Token': authToken || ''
+            }
+          });
+          const data = await response.json();
+          this.stripeInfo.secret_key = data.secret_key;
+          this.stripeInfo.publishable_key = data.publishable_key;
+          this.stripeInfo.country_id = data.country_id;
+        } catch (error) {
+          console.log(error);
+        }
       }
     };
     this.handleContribution = async () => {
       // https://stripe.com/docs/payments/quickstart
-      // const stripe = new Stripe(this.stripeInfo.secret_key);
       var _a;
-      const skhemataFormStripe = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('skhemata-form-stripe');
-      const {
-        stripeElements
-      } = skhemataFormStripe;
-      try {
-        // Get the Stripe token
-        // const checkIntent = await stripeElements?.createToken();
-        // console.log('checkIntent: ', checkIntent);
-        const token = await (stripeElements === null || stripeElements === void 0 ? void 0 : stripeElements.createToken());
-        console.log('token: ', token);
-        // Check the card
-        const cardInfo = {
-          name: 'Alex',
-          number: '',
-          cvc: '',
-          card_token: token.token.id
-        };
-        const response = await fetch('https://coral.thrinacia.com/api/service/restv1/account/stripe/2/card/', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('skhemataToken') || ''
-          },
-          body: JSON.stringify(cardInfo)
-        });
-        // Insufficient funds and other errors will be shown here:
-        const dataResp = await response.json();
-        console.log('response1: ', dataResp);
-        // Plege to campaign
-        const pledgeInfo = {
-          amount: this.contributionAmount,
-          anonymous_contribution: null,
-          anonymous_contribution_partial: null,
-          pledge_level_id: null,
-          stripe_account_card_id: dataResp.stripe_account_card_id,
-          shipping_address_id: null,
-          phone_number_id: null,
-          use_sca: 1
-        };
-        const response2 = await fetch('https://coral.thrinacia.com/api/service/restv1/campaign/1/pledge', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('skhemataToken') || ''
-          },
-          body: JSON.stringify(pledgeInfo)
-        });
-        const dataResp2 = await response2.json();
-        console.log('response2: ', dataResp2);
-        if (dataResp2.payment_intent_status === 'requires_action') {
-          // Use Stripe.js to handle required card action
-          this.stripe.handleCardAction(dataResp2.payment_intent_client_secret).then(result => {
-            // if (result.error) {
-            console.log('paymentIntent: ', result);
-            fetch(`https://coral.thrinacia.com/api/service/restv1/account/stripe/payment-intent-direct/confirm/${result.paymentIntent.id}`, {
-              method: 'POST',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-auth-token': localStorage.getItem('skhemataToken') || ''
-              }
-              // body: JSON.stringify({}),
-            }).then(finalRes => {
-              console.log('response final: ', finalRes);
-            }).catch(e => console.log('e2', e));
-          }).catch(e => console.log(e));
+      if (this.nameOnCard && this.contributionAmount) {
+        this.nameOnCardError = '';
+        this.contributionAmountError = '';
+        const skhemataFormStripe = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('skhemata-form-stripe');
+        const {
+          stripeElements
+        } = skhemataFormStripe;
+        try {
+          this.loadingState = true;
+          // Get the Stripe token
+          const token = await (stripeElements === null || stripeElements === void 0 ? void 0 : stripeElements.createToken());
+          console.log('token: ', token);
+          // Check the card
+          const cardInfo = {
+            name: this.nameOnCard,
+            number: '',
+            cvc: '',
+            card_token: token.token.id
+          };
+          const response = await fetch(`${this.apiFull}account/stripe/2/card/`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': localStorage.getItem('skhemataToken') || ''
+            },
+            body: JSON.stringify(cardInfo)
+          });
+          // Insufficient funds and other errors will be shown here:
+          const dataResp = await response.json();
+          console.log('response1: ', dataResp);
+          // Plege to campaign
+          const pledgeInfo = {
+            amount: this.contributionAmount,
+            anonymous_contribution: null,
+            anonymous_contribution_partial: null,
+            pledge_level_id: null,
+            stripe_account_card_id: dataResp.stripe_account_card_id,
+            shipping_address_id: null,
+            phone_number_id: null,
+            use_sca: 1
+          };
+          const response2 = await fetch(`${this.apiFull}campaign/1/pledge`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': localStorage.getItem('skhemataToken') || ''
+            },
+            body: JSON.stringify(pledgeInfo)
+          });
+          const dataResp2 = await response2.json();
+          console.log('response2: ', dataResp2);
+          if (dataResp2.message === 'Campaign not approved') {
+            this.campaignError = 'Campaign not approved';
+          }
+          if (dataResp2.payment_intent_status === 'requires_action') {
+            // Use Stripe.js to handle required card action
+            this.stripe.handleCardAction(dataResp2.payment_intent_client_secret).then(result => {
+              // if (result.error) {
+              console.log('paymentIntent: ', result);
+              fetch(`${this.apiFull}account/stripe/payment-intent-direct/confirm/${result.paymentIntent.id}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-auth-token': localStorage.getItem('skhemataToken') || ''
+                }
+                // body: JSON.stringify({}),
+              }).then(finalRes => {
+                console.log('response final: ', finalRes);
+              }).catch(e => console.log('e2', e));
+            }).catch(e => console.log(e));
+          }
+          this.stripeCardError = '';
+          this.loadingState = false;
+          this.requestUpdate();
+        } catch (error) {
+          console.log('Error: ', error);
+          this.loadingState = false;
+          this.stripeCardError = error.message;
         }
-        this.requestUpdate();
-      } catch (error) {
-        console.log('Error: ', error);
+      } else {
+        if (!this.nameOnCard) {
+          this.nameOnCardError = 'This field cannot be empty';
+        } else {
+          this.nameOnCardError = '';
+        }
+        if (!this.contributionAmount) {
+          this.contributionAmountError = 'This field cannot be empty';
+        } else {
+          this.contributionAmountError = '';
+        }
       }
     };
     this.postData = async (url = '', data = {}) => {
       // Default options are marked with *
-      const response = await fetch(url, {
+      await fetch(url, {
         method: 'POST',
         mode: 'cors',
         credentials: 'include',
@@ -15923,10 +16336,7 @@ class CampaignContribution extends SkhemataBase {
         },
         body: JSON.stringify(data)
       });
-      console.log('response2', response);
-      // return response.json();
     };
-
     this.dropdownHandle = () => {
       if (this.shadowRoot) {
         const dropdown = this.shadowRoot.querySelector('.dropdown');
@@ -15935,29 +16345,8 @@ class CampaignContribution extends SkhemataBase {
         }
       }
     };
-    // onChange(e: any) {
-    //   this.submitDisabled = !(e.target.complete && !e.target.hasError);
-    // }
-    // onClick() {
-    //   const stripe: any = this.shadowRoot?.querySelector('stripe-elements');
-    //   stripe?.createSource();
-    // }
-    // onSource(e: any) {
-    //   this.source = e.detail.source;
-    // }
-    // onError(e: any) {
-    //   this.error = e.target.error;
-    // }
-    this.handleCheck = () => {
-      var _a;
-      const skhemataFormStripe = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('skhemata-form-stripe');
-      const {
-        stripeElements
-      } = skhemataFormStripe;
-      stripeElements === null || stripeElements === void 0 ? void 0 : stripeElements.createToken().then(response => {
-        console.log('response', response);
-        // Payment processsing here
-      });
+    this.handleNameOnCardChange = e => {
+      this.nameOnCard = e.target.value;
     };
     // Login
     this.handleLogin = async () => {
@@ -15965,15 +16354,15 @@ class CampaignContribution extends SkhemataBase {
         email: 'myadmin@thrinacia.com',
         password: '__bootstrap__'
       };
-      fetch('https://coral.thrinacia.com/api/service/restv1/authenticate', {
+      fetch(`${this.apiFull}authenticate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       }).then(response => response.json()).then(user => {
-        console.log('Success:', user);
         window.localStorage.setItem('skhemataToken', user.auth_token);
+        this.handleAuthStateChange();
         this.requestUpdate();
       }).catch(error => {
         console.error('Error:', error);
@@ -15981,18 +16370,15 @@ class CampaignContribution extends SkhemataBase {
     };
     // logout
     this.handleLogout = () => {
-      fetch('https://coral.thrinacia.com/api/service/restv1/logout', {
+      fetch(`${this.apiFull}logout`, {
         method: 'POST',
-        // credentials: 'include',
-        // mode: 'cors',
         headers: {
           'Content-Type': 'application/json'
         }
-      }).then(response => {
-        console.log(response);
+      }).then(() => {
         window.localStorage.removeItem('skhemataToken');
+        this.handleAuthStateChange();
         this.requestUpdate();
-        // window.location.reload();
       }).catch(e => console.log(e));
     };
     this.handleTabSwitch = (event, tab) => {
@@ -16005,7 +16391,6 @@ class CampaignContribution extends SkhemataBase {
       this.contributionAmount = value;
     };
     this.handleChosenReward = (reward, pledge) => {
-      console.log(reward);
       if (reward === 'standard') {
         if (this.contributionAmount > 1) {
           this.contributionAmount = 1;
@@ -16024,6 +16409,10 @@ class CampaignContribution extends SkhemataBase {
         stripe-elements {
           --stripe-elements-base-line-height: 1.57rem;
           --stripe-elements-border: 1px solid #dbdbdb;
+        }
+
+        *, ::before, ::after {
+            box-sizing: border-box;
         }
 
         .contribution-container-wrapper {
@@ -16080,6 +16469,7 @@ class CampaignContribution extends SkhemataBase {
           gap: 3rem;
         }
 
+
         .reward-btn {
           border: 5px solid black;
           border-radius: 0.5rem;
@@ -16095,13 +16485,38 @@ class CampaignContribution extends SkhemataBase {
         }
 
         .review-payment-section .contributeBtn {
-          height: 28px !important;
+          max-height: 40px !important;
         }
 
         .dropdown .button {
           justify-content: space-between;
           width: 200px;
         }
+
+       /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+
+        .btn-back-wrapper {
+          display: grid;
+          grid-template-columns: 2fr 1fr; 
+        }
+
+        .btn-back-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-right: 3rem;
+        }
+
       `];
   }
   static get scopedElements() {
@@ -16111,7 +16526,9 @@ class CampaignContribution extends SkhemataBase {
       'create-account-contribution': CreateAccountContribution,
       'express-checkout-contribution': ExpressCheckoutContribution,
       'card-reward-component': CardReward,
-      'campaign-profile': CampaignProfile
+      'campaign-profile': CampaignProfile,
+      'menu-component': Menu,
+      'card-information-component': CardInfo
     };
   }
   /**
@@ -16120,30 +16537,18 @@ class CampaignContribution extends SkhemataBase {
    */
   async firstUpdated() {
     var _a;
+    await super.firstUpdated();
+    this.handleAuthStateChange();
     await this.getStripeKeys();
     this.stripeElements = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('stripe-elements');
-    console.log('stripeElements', this.stripeElements);
-    this.handleAuthStateChange();
     this.initStripe();
   }
   initStripe() {
-    if (window.Stripe) {
+    if (window.Stripe && this.authState) {
       const stripe = window.Stripe(this.stripeInfo.publishable_key);
-      console.log('stripe', stripe);
       this.stripe = stripe;
-      // const elements = stripe.elements();
-      // const cardElement = elements.create('card');
-      // cardElement.mount('#card-element');
     } else {
       console.log('Stripe is not loaded');
-    }
-  }
-  handleAuthStateChange() {
-    const authToken = localStorage.getItem('skhemataToken');
-    if (authToken) {
-      this.authState = true;
-    } else {
-      this.authState = false;
     }
   }
   // https://stripe.com/docs/payments/quickstart
@@ -16154,22 +16559,17 @@ class CampaignContribution extends SkhemataBase {
         <campaign-profile .campaign=${this.campaign}></campaign-profile>
       </div>
       <!-- <script src="https://js.stripe.com/v3/"></script> -->
-      <button class="button btn-back" @click="${this.handleBack}">Back</button>
-      <!-- <button class="button" @click="${this.handleCheck}">Check</button>
-      <button class="button" @click="${this.handleLogin}">Login</button>
-      <button class="button" @click="${this.handleLogout}">Logout</button> -->
-      <!-- Stripe.js injects the Payment Element -->
-      <!-- <div>
-        <form id="payment-form">
-          <div id="payment-element">
+      <div class="btn-back-wrapper">
+        <div class="btn-back-container">
+          <button class="button btn-back" @click="${this.handleBack}">Back</button>
+          
+          <div class="contribution-menuWrapper">
+            <menu-component .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}" .apiFull="${this.apiFull}"></menu-component>
           </div>
-          <button id="submit">
-            <div class="spinner hidden" id="spinner"></div>
-            <span id="button-text">Pay now</span>
-          </button>
-          <div id="payment-message" class="hidden"></div>
-        </form>
-      </div> -->
+        </div>
+
+        <div></div>
+      </div>
 
       <div class="contribution-container-wrapper">
         <div class="contribution-container-left">
@@ -16180,11 +16580,14 @@ class CampaignContribution extends SkhemataBase {
                   <div class="reward-section-box">
                     <div class="control">
                       <input
-                        class="input"
+                        class="input ${this.nameOnCardError ? "is-danger" : ""}"
                         type="text"
                         placeholder="Name on Card"
+                        @change="${this.handleNameOnCardChange}"
                       />
+                      ${this.nameOnCardError ? y`<p class="help is-danger">${this.nameOnCardError}</p>` : y``}
                     </div>
+
                     <div class="control">
                       <skhemata-form-stripe
                         id="skhemata-form-stripe"
@@ -16194,6 +16597,7 @@ class CampaignContribution extends SkhemataBase {
                         .contributionId=${this.contributionObj.id}
                         .confirmInfo=${this.contributionObj.confirmInfo}
                       ></skhemata-form-stripe>
+                      <!-- ${this.stripeCardError ? y`<p class="help is-danger">${this.stripeCardError}</p>` : y``} -->
                     </div>
                   </div>
                 </div>
@@ -16201,7 +16605,7 @@ class CampaignContribution extends SkhemataBase {
                 <!-- Account Information -->
                 <div class="field">
                   <h3 class="title">Account Information</h3>
-                  <div class="tabs">
+                  <div class="tabs is-boxed">
                     <ul>
                       <li
                         class="${this.currentTab === 'Login' ? 'is-active' : ''}"
@@ -16230,9 +16634,15 @@ class CampaignContribution extends SkhemataBase {
                     </ul>
                   </div>
 
-                  ${this.currentTab === 'Login' ? y` <login-contribution></login-contribution>` : null}
-                  ${this.currentTab === 'CreateAccount' ? y` <create-account-contribution></create-account-contribution>` : null}
-                  ${this.currentTab === 'ExpressCheckout' ? y` <express-checkout-contribution></express-checkout-contribution>` : null}
+                  ${this.currentTab === 'Login' ? y` <login-contribution .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}"></login-contribution>` : null}
+                  ${this.currentTab === 'CreateAccount' ? y`
+                      <create-account-contribution .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}"></create-account-contribution>
+                      <!-- <card-information-component></card-information-component> -->
+                      ` : null}
+                  ${this.currentTab === 'ExpressCheckout' ? y`
+                      <express-checkout-contribution></express-checkout-contribution>
+                      <!-- <card-information-component></card-information-component> -->
+                      ` : null}
                 </div>
               `}
 
@@ -16288,12 +16698,16 @@ class CampaignContribution extends SkhemataBase {
                 </div>
               </div>
 
-              <button
-                class="button contributeBtn has-background-info has-text-white"
-                @click="${this.handleContribution}"
-              >
-                Contribute
-              </button>
+              <div>
+                <button
+                  class="button contributeBtn has-background-info has-text-white ${this.loadingState ? 'is-loading' : ''}"
+                  @click="${this.handleContribution}"
+                >
+                  Contribute
+                </button>
+
+                ${this.campaignError ? y`<p class="help is-danger">${this.campaignError}</p>` : y``}
+              </div>
             </div>
           </div>
         </div>
@@ -16321,12 +16735,13 @@ class CampaignContribution extends SkhemataBase {
                   <div class="control">
                     <input
                       min="1"
-                      class="input"
+                      class="input input-number ${this.contributionAmountError ? "is-danger" : ""}"
                       type="number"
                       placeholder="Contribution Amount"
                       .value="${this.contributionAmount.toString()}"
                       @input="${this.handleContributionAmount}"
                     />
+                    ${this.contributionAmountError ? y`<p class="help is-danger">${this.contributionAmountError}</p>` : y``}
                   </div>
                 </div>
               </div>
@@ -16374,8 +16789,32 @@ __decorate([e$4({
 })], CampaignContribution.prototype, "stripeElements", void 0);
 __decorate([e$4({
   type: String,
+  attribute: 'api_full'
+})], CampaignContribution.prototype, "apiFull", void 0);
+__decorate([e$4({
+  type: String,
   attribute: 'currentPage'
 })], CampaignContribution.prototype, "currentPage", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'nameOnCard'
+})], CampaignContribution.prototype, "nameOnCard", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'nameOnCardError'
+})], CampaignContribution.prototype, "nameOnCardError", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'contributionAmountError'
+})], CampaignContribution.prototype, "contributionAmountError", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'stripeCardError'
+})], CampaignContribution.prototype, "stripeCardError", void 0);
+__decorate([e$4({
+  type: String,
+  attribute: 'campaignError'
+})], CampaignContribution.prototype, "campaignError", void 0);
 __decorate([e$4({
   type: String,
   attribute: 'currentTab'
@@ -16392,6 +16831,9 @@ __decorate([e$4({
 __decorate([e$4({
   type: Boolean
 })], CampaignContribution.prototype, "submitDisabled", void 0);
+__decorate([e$4({
+  type: Boolean
+})], CampaignContribution.prototype, "loadingState", void 0);
 __decorate([e$4({
   type: Boolean
 })], CampaignContribution.prototype, "authState", void 0);
@@ -16433,9 +16875,23 @@ class SkhemataCrowdfundingCampaign extends SkhemataBase {
         }
 
         .headerContainer {
-          text-align: center;
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
           margin-bottom: 1rem;
+          text-align: center;
+          align-items: center;
         }
+
+        .headerWrapper {
+          grid-column: 2 / 3;
+        }
+
+        .menuWrapper {
+          grid-column: 3 / 4;
+          /* text-align: right; */
+          justify-self: flex-end;
+        }
+
       `];
   }
   static get scopedElements() {
@@ -16443,7 +16899,8 @@ class SkhemataCrowdfundingCampaign extends SkhemataBase {
       'campaign-info': campaignInfo,
       'campaign-faq': campaignFaq,
       'campaign-backers': campaignBackers,
-      'campaign-contribution': CampaignContribution
+      'campaign-contribution': CampaignContribution,
+      'menu-component': Menu
     };
   }
   /**
@@ -16454,24 +16911,37 @@ class SkhemataCrowdfundingCampaign extends SkhemataBase {
     await super.firstUpdated();
     this.getCampaign();
     this.tabEvent();
+    if (this.apiUrl && this.locPath) {
+      this.apiFull = this.apiUrl + this.locPath;
+    } else {
+      this.apiFull = '';
+    }
   }
   render() {
     var _a, _b, _c;
+    console.log(this.apiFull);
     if (this.currentPage === 'contribution') {
       return y`<campaign-contribution
         .currentPage="${this.currentPage}"
         .handleBack="${this.handleBack}"
         .campaign="${this.campaign}"
+        .apiFull = "${this.apiFull}"
       ></campaign-contribution>`;
     }
     return y`
     <div class="container">
       <div class="headerContainer">
+        <!-- <div></div> -->
+        <div class="headerWrapper">
           <div class="header"> 
             <h1>${(_a = this.campaign) === null || _a === void 0 ? void 0 : _a.name}</h1>
           </div>
           <div>by <b>${(_b = this.campaign) === null || _b === void 0 ? void 0 : _b.managers[0].first_name} ${(_c = this.campaign) === null || _c === void 0 ? void 0 : _c.managers[0].last_name}</b>
           </div>
+        </div>
+        <div class="menuWrapper">
+          <menu-component .apiFull="${this.apiFull}"></menu-component>
+        </div>
       </div>
         <div class="tabs">
           <ul id="tabs">
@@ -16558,6 +17028,9 @@ __decorate([e$4({
   type: String,
   attribute: 'loc_path'
 })], SkhemataCrowdfundingCampaign.prototype, "locPath", void 0);
+__decorate([e$4({
+  type: String
+})], SkhemataCrowdfundingCampaign.prototype, "apiFull", void 0);
 __decorate([e$4({
   type: String,
   attribute: 'campaign_id'

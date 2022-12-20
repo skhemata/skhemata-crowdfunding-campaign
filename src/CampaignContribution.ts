@@ -350,10 +350,10 @@ export class CampaignContribution extends SkhemataBase {
    */
 
   async firstUpdated() {
+    await super.firstUpdated();
     this.handleAuthStateChange();
     await this.getStripeKeys();
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
-    console.log('stripeElements', this.stripeElements);
     this.initStripe();
   }
 
@@ -364,57 +364,52 @@ export class CampaignContribution extends SkhemataBase {
   initStripe() {
     if (window.Stripe && this.authState) {
       const stripe: any = window.Stripe(this.stripeInfo.publishable_key);
-      console.log('stripe', stripe);
       this.stripe = stripe;
-      // const elements = stripe.elements();
-      // const cardElement = elements.create('card');
-      // cardElement.mount('#card-element');
+      
     } else {
       console.log('Stripe is not loaded');
     }
   }
 
-  handleAuthStateChange() {
-    const authToken = localStorage.getItem('skhemataToken');
-    if (authToken) {
+  handleAuthStateChange = () => {
+    const authToken = window.localStorage.getItem('skhemataToken');
+
+    if (authToken !== null) {
       this.authState = true;
+      this.getStripeKeys();
     } else {
       this.authState = false;
     }
+    this.requestUpdate();
   }
 
   getStripeKeys = async () => {
     const authToken = window.localStorage.getItem('skhemataToken');
-    console.log('authToken: ', authToken);
-    console.log('state: ', this.authState);
 
     // StripeInfo
     if(this.authState) {
-
-    
-    try {
-      const response = await fetch(
-        `${this.apiFull}account/stripe/application`,
-        {
-          // credentials: 'include',
-          headers: {
-            'X-Auth-Token': authToken || '',
-          },
-        }
-      );
-      const data = await response.json();
-      this.stripeInfo.secret_key = data.secret_key;
-      this.stripeInfo.publishable_key = data.publishable_key;
-      this.stripeInfo.country_id = data.country_id;
-    } catch (error) {
-      console.log(error);
+      try {
+        const response = await fetch(
+          `${this.apiFull}account/stripe/application`,
+          {
+            // credentials: 'include',
+            headers: {
+              'X-Auth-Token': authToken || '',
+            },
+          }
+        );
+        const data = await response.json();
+        this.stripeInfo.secret_key = data.secret_key;
+        this.stripeInfo.publishable_key = data.publishable_key;
+        this.stripeInfo.country_id = data.country_id;
+      } catch (error) {
+        console.log(error);
+      }
     }
-  }
   };
 
   handleContribution = async () => {
     // https://stripe.com/docs/payments/quickstart
-    // const stripe = new Stripe(this.stripeInfo.secret_key);
 
     if(this.nameOnCard && this.contributionAmount) {
       this.nameOnCardError = ''
@@ -429,8 +424,6 @@ export class CampaignContribution extends SkhemataBase {
       try {
         this.loadingState = true;
         // Get the Stripe token
-        // const checkIntent = await stripeElements?.createToken();
-        // console.log('checkIntent: ', checkIntent);
         const token = await stripeElements?.createToken();
         console.log('token: ', token);
         // Check the card
@@ -543,7 +536,7 @@ export class CampaignContribution extends SkhemataBase {
 
   postData = async (url = '', data = {}) => {
     // Default options are marked with *
-    const response = await fetch(url, {
+    await fetch(url, {
       method: 'POST',
       mode: 'cors',
       credentials: 'include',
@@ -553,9 +546,6 @@ export class CampaignContribution extends SkhemataBase {
       },
       body: JSON.stringify(data),
     });
-    console.log('response2', response);
-
-    // return response.json();
   };
 
   dropdownHandle = () => {
@@ -570,37 +560,6 @@ export class CampaignContribution extends SkhemataBase {
   handleNameOnCardChange = (e: any) => {
     this.nameOnCard = e.target.value;
   }
-
-  // onChange(e: any) {
-  //   this.submitDisabled = !(e.target.complete && !e.target.hasError);
-  // }
-
-  // onClick() {
-  //   const stripe: any = this.shadowRoot?.querySelector('stripe-elements');
-  //   stripe?.createSource();
-  // }
-
-  // onSource(e: any) {
-  //   this.source = e.detail.source;
-  // }
-
-  // onError(e: any) {
-  //   this.error = e.target.error;
-  // }
-
-  handleCheck = () => {
-    const skhemataFormStripe: any = this.shadowRoot?.getElementById(
-      'skhemata-form-stripe'
-    );
-
-    const { stripeElements } = skhemataFormStripe;
-
-    stripeElements?.createToken().then((response: any) => {
-      console.log('response', response);
-
-      // Payment processsing here
-    });
-  };
 
   // Login
   handleLogin = async () => {
@@ -618,7 +577,6 @@ export class CampaignContribution extends SkhemataBase {
     })
       .then(response => response.json())
       .then(user => {
-        console.log('Success:', user);
         window.localStorage.setItem('skhemataToken', user.auth_token);
         this.handleAuthStateChange();
         this.requestUpdate();
@@ -632,17 +590,14 @@ export class CampaignContribution extends SkhemataBase {
   handleLogout = () => {
     fetch(`${this.apiFull}logout`,{
       method: 'POST',
-      // credentials: 'include',
-      // mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
       },
     })
-      .then(response => {
-        console.log(response);
+      .then(() => {
         window.localStorage.removeItem('skhemataToken');
+        this.handleAuthStateChange();
         this.requestUpdate();
-        // window.location.reload();
       })
       .catch(e => console.log(e));
   };
@@ -657,7 +612,6 @@ export class CampaignContribution extends SkhemataBase {
   };
 
   handleChosenReward = (reward: string, pledge?: any) => {
-    console.log(reward);
     if (reward === 'standard') {
       if (this.contributionAmount > 1) {
         this.contributionAmount = 1;
@@ -671,6 +625,7 @@ export class CampaignContribution extends SkhemataBase {
       this.openStatus = false;
     }
   };
+
 
   // https://stripe.com/docs/payments/quickstart
 
@@ -691,21 +646,6 @@ export class CampaignContribution extends SkhemataBase {
 
         <div></div>
       </div>
-      <!-- <button class="button" @click="${this.handleCheck}">Check</button>
-      <button class="button" @click="${this.handleLogin}">Login</button>
-      <button class="button" @click="${this.handleLogout}">Logout</button> -->
-      <!-- Stripe.js injects the Payment Element -->
-      <!-- <div>
-        <form id="payment-form">
-          <div id="payment-element">
-          </div>
-          <button id="submit">
-            <div class="spinner hidden" id="spinner"></div>
-            <span id="button-text">Pay now</span>
-          </button>
-          <div id="payment-message" class="hidden"></div>
-        </form>
-      </div> -->
 
       <div class="contribution-container-wrapper">
         <div class="contribution-container-left">
@@ -786,7 +726,7 @@ export class CampaignContribution extends SkhemataBase {
                     : null}
                   ${this.currentTab === 'CreateAccount'
                     ? html`
-                      <create-account-contribution></create-account-contribution>
+                      <create-account-contribution .handleAuthStateChange="${this.handleAuthStateChange}" .authState="${this.authState}"></create-account-contribution>
                       <!-- <card-information-component></card-information-component> -->
                       `
                     : null}

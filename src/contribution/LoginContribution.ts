@@ -21,7 +21,7 @@ export class LoginContribution extends LitElement {
 
   @property({ type: Boolean }) submitDisabled = false;
 
-  @property({ type: Boolean }) authState = false;
+  @property({ type: Boolean }) authState: boolean | undefined;
 
   @property({ type: Function })
   handleAuthStateChange!: () => void;
@@ -41,12 +41,13 @@ export class LoginContribution extends LitElement {
           email: email.value,
           password: password.value,
         };
-        console.log('INFO: ', info);
 
         const res = await loginRequest('/authenticate', 'POST', info);
         const data = await res.json();
-        window.localStorage.setItem('skhemataToken', data.auth_token);
-        console.log(data);
+        if(data.auth_token !== undefined) {
+          window.localStorage.setItem('skhemataToken', data.auth_token);
+        }
+        
         this.handleAuthStateChange();
         this.requestUpdate();
       }

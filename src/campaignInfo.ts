@@ -31,7 +31,7 @@ export class campaignInfo extends SkhemataBase {
           /* text-align: center; */
         }
         .right-info > div {
-          margin-bottom: 30px;
+          margin-bottom: 2rem;
         }
         .start-end-time {
           border-radius: 5px;
@@ -46,6 +46,10 @@ export class campaignInfo extends SkhemataBase {
 
         .campaign-description {
           margin-top: 20px;
+        }
+
+        #campaignProgress {
+          margin-bottom: 0.5rem;
         }
       `,
     ];
@@ -348,21 +352,23 @@ export class campaignInfo extends SkhemataBase {
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"
-              >${this.campaign?.total_backers}</span
-            >
-            ${this.campaign?.total_backers === 1 ? 'Backer' : 'Backers'}
-          </div>
-          <div>
-            <span class="campaign-info-highlight has-text-info"
               >${this.addCurrencySymbols(this.campaign?.funded_amount)}</span
             >
             Raised in ${this.getRaisedInPeriod().elapsed} ${this.getRaisedInPeriod().unit}
           </div>
           <div>
+            <progress class="progress is-info" id="campaignProgress" value="${this.campaign?.funded_percentage}" max="100">${this.campaign?.funded_percentage}%</progress>
+            
             <span class="campaign-info-highlight has-text-info"
               >${this.campaign?.funded_percentage}%</span
             >
             Funded of <b>${this.addCurrencySymbols(this.campaign?.funding_goal)}</b> Goal 
+          </div>
+          <div>
+            <span class="campaign-info-highlight has-text-info"
+              >${this.campaign?.total_backers}</span
+            >
+            ${this.campaign?.total_backers === 1 ? 'Backer' : 'Backers'}
           </div>
           <div>
             <span class="campaign-info-highlight has-text-info"

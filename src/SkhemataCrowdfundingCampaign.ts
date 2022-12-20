@@ -74,7 +74,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
   @property({ type: String, attribute: 'loc_path' }) locPath?: string;
 
-  @property({ type: String, attribute: 'api_full' }) apiFull?: string;
+  @property({ type: String }) apiFull?: string;
 
   @property({ type: String, attribute: 'campaign_id' }) campaignId?: number;
 
@@ -107,6 +107,8 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   };
 
   render() {  
+    console.log(this.apiFull);
+    
     if (this.currentPage === 'contribution') {
       return html`<campaign-contribution
         .currentPage="${this.currentPage}"
