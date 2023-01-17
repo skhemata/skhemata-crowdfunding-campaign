@@ -59,6 +59,10 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         .campaign-reward-button {
           padding: 0.5rem 0.75rem;
         }
+
+        .campaign-details-container > .column:first-of-type {
+          order: 1;
+        }
       `,
     ];
   }
@@ -164,6 +168,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         .handleBack="${this.handleBack}"
         .campaign="${this.campaign}"
         .apiFull="${this.apiFull}"
+        .apiUrl="${this.apiUrl}"
         .authState="${this.authState}"
         .stripeInfoPublishableKey="${this.stripeInfoPublishableKey}"
         .handleAuthStateChange="${this.handleAuthStateChange}"
@@ -171,7 +176,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       ></campaign-contribution>`;
     }
 
-    return html` <div class="container mt-6">
+    return html` <div class="container mt-6 p-4">
       <div class="headerContainer">
         <!-- <div></div> -->
         <div class="headerWrapper">
@@ -231,41 +236,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </div>
 
           <div class="columns campaign-details-container">
-            <div class="column">
-              <div class="tabs">
-                <ul id="tabs">
-                  <li class="is-active ">
-                    <a data-tab="campaign">Campaign</a>
-                  </li>
-                  <li><a data-tab="faq">FAQ</a></li>
-                  <li><a data-tab="backers">Backers</a></li>
-                  <li><a data-tab="updates">Updates</a></li>
-                  <li><a data-tab="comments">Comments</a></li>
-                </ul>
-              </div>
-              <div id="tab-content">
-                <div class="is-active" data-content="campaign">
-                  <campaign-description
-                    .campaign="${this.campaign}"
-                  ></campaign-description>
-                </div>
-                <div data-content="faq">
-                  <campaign-faq .campaign=${this.campaign}></campaign-faq>
-                </div>
-                <div data-content="backers">
-                  <campaign-backers
-                    .apiUrl=${this.apiUrl}
-                    .locPath=${this.locPath}
-                    .campaignId=${this.campaignId}
-                    .campaign=${this.campaign}
-                  ></campaign-backers>
-                </div>
-                <div data-content="updates">Updates</div>
-                <div data-content="comments">Comments</div>
-              </div>
-            </div>
-
-            <div class="column is-one-third">
+          <div class="column is-one-third">
               <div class="columns buttons is-flex contribute-share-container">
                   <button
                     class="column button is-success is-small is-responsive is-flex-grow-1 campaign-reward-button"
@@ -307,6 +278,42 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
                 </div>
               </div>
             </div>
+
+
+            <div class="column">
+              <div class="tabs">
+                <ul id="tabs">
+                  <li class="is-active ">
+                    <a data-tab="campaign">Campaign</a>
+                  </li>
+                  <li><a data-tab="faq">FAQ</a></li>
+                  <li><a data-tab="backers">Backers</a></li>
+                  <li><a data-tab="updates">Updates</a></li>
+                  <li><a data-tab="comments">Comments</a></li>
+                </ul>
+              </div>
+              <div id="tab-content">
+                <div class="is-active" data-content="campaign">
+                  <campaign-description
+                    .campaign="${this.campaign}"
+                  ></campaign-description>
+                </div>
+                <div data-content="faq">
+                  <campaign-faq .campaign=${this.campaign}></campaign-faq>
+                </div>
+                <div data-content="backers">
+                  <campaign-backers
+                    .apiUrl=${this.apiUrl}
+                    .locPath=${this.locPath}
+                    .campaignId=${this.campaignId}
+                    .campaign=${this.campaign}
+                  ></campaign-backers>
+                </div>
+                <div data-content="updates">Updates</div>
+                <div data-content="comments">Comments</div>
+              </div>
+            </div>
+            
           </div>
         </div>
       </div>
