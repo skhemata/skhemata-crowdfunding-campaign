@@ -89,6 +89,23 @@ export class CampaignContribution extends SkhemataBase {
           transform: rotate(180deg);
         }
 
+        .totalContribution-container {
+          border-top: 1px solid #e5e5e5;
+        }
+
+        .contributeBtn {
+          border-radius: 7.5px;
+        }
+
+        .tabs li.is-active a {
+          border-bottom-color: hsl(141, 71%, 48%);
+          color: hsl(141, 71%, 48%);
+        }
+
+        .campaign-categories-list {
+          gap: 1.5rem;
+        }
+
         /* 
         *,
         ::before,
@@ -871,7 +888,7 @@ export class CampaignContribution extends SkhemataBase {
                         Account Information
                       </h3>
                     </div> -->
-                    <div class="tabs is-boxed">
+                    <div class="tabs">
                       <ul>
                         <li
                           class="${this.currentTab === 'Login'
@@ -935,30 +952,60 @@ export class CampaignContribution extends SkhemataBase {
                 `}
 
             <!-- Review Payment -->
-            <div class="field review-payment-section">
-              <h3 class="titleFont is-size-3 has-text-weight-bold">
+            <div class="field review-payment-section mt-6">
+              <h3 class="titleFont is-size-4 has-text-weight-bold">
                 Review Payment
               </h3>
 
-              <div class="total-amount-box">
-                <h4>Total Contribution:</h4>
-                <h4>
-                  <span>
-                    ${this.currencySymbols[
-                      this.campaign?.currencies[0].code_iso4217_alpha
-                    ]}
-                    ${this.contributionAmount}
-                    ${this.campaign?.currencies[0].code_iso4217_alpha}
-                  </span>
+              <div
+                class="is-flex is-justify-content-space-between total-amount-box mt-4 mb-2"
+              >
+                <p class="is-size-5">Contribution:</p>
+                <p class="is-size-5">
+                  ${this.currencySymbols[
+                    this.campaign?.currencies[0].code_iso4217_alpha
+                  ]}
+                  ${this.contributionAmount}
+                  ${this.campaign?.currencies[0].code_iso4217_alpha}
+                </p>
+              </div>
+
+              <div
+                class="is-flex is-justify-content-space-between total-amount-box mt-2 mb-5"
+              >
+                <p class="is-size-5">Tip:</p>
+                <p class="is-size-5">
+                  ${this.currencySymbols[
+                    this.campaign?.currencies[0].code_iso4217_alpha
+                  ]}
+                  ${this.campaign?.tip_amount}
+                  ${this.campaign?.currencies[0].code_iso4217_alpha}
+                </p>
+              </div>
+
+              <div
+                class="totalContribution-container is-flex is-justify-content-space-between total-amount-box pt-5 mb-2"
+              >
+                <h4 class="titleFont is-size-4 has-text-weight-bold">
+                  Total Contribution:
+                </h4>
+                <h4 class="titleFont is-size-4 has-text-weight-bold">
+                  ${this.currencySymbols[
+                    this.campaign?.currencies[0].code_iso4217_alpha
+                  ]}
+                  ${this.contributionAmount}
+                  ${this.campaign?.currencies[0].code_iso4217_alpha}
                 </h4>
               </div>
 
-              <div class="contribution-box">
+              <div
+                class="is-flex is-justify-content-space-between is-align-items-center contribution-box mt-6"
+              >
                 <div class="control">
                   <div class="dropdown">
                     <div class="dropdown-trigger">
                       <button
-                        class="button"
+                        class="button has-background-grey-lighter is-size-5"
                         aria-haspopup="true"
                         aria-controls="dropdown-menu"
                         @click="${this.dropdownHandle}"
@@ -994,7 +1041,7 @@ export class CampaignContribution extends SkhemataBase {
 
                 <div>
                   <button
-                    class="button contributeBtn has-background-info has-text-white ${this
+                    class="button contributeBtn has-background-dark has-text-white is-size-5 py-0 px-5 ${this
                       .loadingState
                       ? 'is-loading'
                       : ''}"

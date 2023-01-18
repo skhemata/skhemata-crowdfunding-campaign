@@ -1,3 +1,4 @@
+/* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable lit/attribute-value-entities */
 /* eslint-disable no-undef */
 /* eslint-disable no-var */
@@ -62,6 +63,52 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
         .campaign-details-container > .column:first-of-type {
           order: 1;
+        }
+
+        .campaign-container {
+          position: relative;
+        }
+
+        .mobile-menu {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: #fff;
+          z-index: 100;
+          display: none;
+        }
+
+        .mobile-menu.is-active {
+          display: block;
+        }
+
+        .mobile-menu-btn {
+          display: block;
+          position: absolute;
+          top: 0;
+          right: 1rem;
+        }
+
+        .mobile-menu-close {
+          position: absolute;
+          top: 0.5rem;
+          right: 1.5rem;
+        }
+
+        .tabs {
+          display: none;
+        }
+
+        @media screen and (min-width: 768px) {
+          .mobile-menu-btn {
+            display: none;
+          }
+
+          .tabs {
+            display: block;
+          }
         }
       `,
     ];
@@ -161,6 +208,13 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     }
   };
 
+  mobileMenuToggle = () => {
+    if (this.shadowRoot) {
+      const mobileMenu = this.shadowRoot.querySelector('.mobile-menu');
+      mobileMenu?.classList.toggle('is-active');
+    }
+  };
+
   render() {
     if (this.currentPage === 'contribution') {
       return html`<campaign-contribution
@@ -176,7 +230,20 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       ></campaign-contribution>`;
     }
 
-    return html` <div class="container mt-6 p-4">
+    return html` <div class="container pt-6 p-4 campaign-container">
+      <div class="mobile-menu-btn">
+        <a @click="${this.mobileMenuToggle}">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_211_8890" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="36" height="36">
+<rect width="36" height="36" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#mask0_211_8890)">
+<path d="M4.5 27V24.4872H31.5V27H4.5ZM4.5 19.2375V16.7625H31.5V19.2375H4.5ZM4.5 11.5128V9H31.5V11.5128H4.5Z" fill="#4D4D4D"/>
+</g>
+</svg>
+        </a> 
+      </div>
+
       <div class="headerContainer">
         <!-- <div></div> -->
         <div class="headerWrapper">
@@ -192,8 +259,8 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
             >
           </div> -->
         </div>
-        <div class="columns mb-5">
-          <div class="column is-flex is-align-items-center">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-5">
+          <div class="is-flex is-align-items-center">
             <span class="pr-5">
               <svg
                 width="36"
@@ -215,7 +282,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
               )}
               </div>
             </div>
-              <div class="column is-one-third has-text-right ">
+              <div class="has-text-right ">
                 <menu-component
                   .authState="${this.authState}"
                   .handleAuthStateChange="${this.handleAuthStateChange}"
@@ -283,7 +350,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
             <div class="column">
               <div class="tabs">
                 <ul id="tabs">
-                  <li class="is-active ">
+                  <li class="is-active">
                     <a data-tab="campaign">Campaign</a>
                   </li>
                   <li><a data-tab="faq">FAQ</a></li>
@@ -317,6 +384,30 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </div>
         </div>
       </div>
+
+      <div class="mobile-menu">
+        <a class="mobile-menu-close" @click="${this.mobileMenuToggle}">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="mask0_211_8884" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="36" height="36">
+            <rect width="36" height="36" fill="#D9D9D9"/>
+            </mask>
+            <g mask="url(#mask0_211_8884)">
+            <path d="M9.6 28.5L7.5 26.4L15.9 18L7.5 9.6L9.6 7.5L18 15.9L26.4 7.5L28.5 9.6L20.1 18L28.5 26.4L26.4 28.5L18 20.1L9.6 28.5Z" fill="#4D4D4D"/>
+            </g>
+          </svg>
+        </a>
+        <div class="mobile-menu-container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-flex-gap-4">
+        <ul id="tabs2">
+            <li class="is-active">
+              <a data-tab="campaign">Campaign</a>
+            </li>
+            <li><a data-tab="faq">FAQ</a></li>
+            <li><a data-tab="backers">Backers</a></li>
+            <li><a data-tab="updates">Updates</a></li>
+            <li><a data-tab="comments">Comments</a></li>
+          </ul>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -341,14 +432,21 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     this.shadowRoot?.getElementById('tabs')?.addEventListener('click', e => {
       let selected: any = e.target;
       if (selected && selected.getAttribute('data-tab')) {
-        this.updateActiveTab(selected);
+        this.updateActiveTab(selected, 'tabs');
+      }
+    });
+
+    this.shadowRoot?.getElementById('tabs2')?.addEventListener('click', e => {
+      let selected: any = e.target;
+      if (selected && selected.getAttribute('data-tab')) {
+        this.updateActiveTab(selected, 'tabs2');
       }
     });
   }
 
-  private updateActiveTab(selected: any) {
+  private updateActiveTab(selected: any, tabsName: string) {
     // Update active tab
-    let tabs: any = this.shadowRoot?.getElementById('tabs');
+    let tabs: any = this.shadowRoot?.getElementById(tabsName);
     for (let i = 0; i < tabs.children.length; i += 1) {
       if (
         tabs.children[i] &&

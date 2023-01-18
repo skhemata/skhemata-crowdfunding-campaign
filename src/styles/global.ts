@@ -30,4 +30,30 @@ export const GlobalStyles = css`
     font-style: normal;
     line-height: 112.5%;
   }
+
+  .btnRadius {
+    border-radius: 7.5px;
+  }
+
+  .is-flex-gap-0 {
+    gap: 0;
+  }
+  .is-flex-gap-1 {
+    gap: 0.25rem;
+  }
+  .is-flex-gap-2 {
+    gap: 0.5rem;
+  }
+  .is-flex-gap-3 {
+    gap: 0.75rem;
+  }
+  .is-flex-gap-4 {
+    gap: 1rem;
+  }
+  .is-flex-gap-5 {
+    gap: 1.5rem;
+  }
+  .is-flex-gap-6 {
+    gap: 3rem;
+  }
 `;
