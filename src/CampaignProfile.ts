@@ -223,15 +223,6 @@ export class CampaignProfile extends SkhemataBase {
 
     await this.loadUserProfile();
     await this.loadBackedCampaigns();
-    // fetch('https://coral.thrinacia.com/api/service/restv1/locale/currency', {
-    //   credentials: 'include',
-    // })
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     console.log('currencies: ', data);
-    //     this.currencies = data;
-    //   })
-    //   .catch(e => console.log(e));
   }
 
   updated() {
