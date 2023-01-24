@@ -8,7 +8,7 @@ import { Bulma } from '@skhemata/skhemata-css';
 import { Menu } from '../components/Menu';
 import { GlobalStyles } from '../styles/global';
 
-export class CampaignProfile extends LitElement {
+export class CampaignHeader extends LitElement {
   static styles = <CSSResult[]>[
     Bulma,
     GlobalStyles,
@@ -38,6 +38,12 @@ export class CampaignProfile extends LitElement {
   @property({ type: String, attribute: 'api_url' }) apiUrl?: string;
 
   @property({ type: String }) campaignMainImage?: any;
+
+  @property({ type: String }) apiFull?: string;
+
+  @property({ type: Boolean }) authState: boolean | undefined;
+
+  @property({ type: Function }) handleAuthStateChange!: () => void;
 
   updated() {
     this.getCampaignMainImage();
@@ -81,9 +87,6 @@ export class CampaignProfile extends LitElement {
           <div class="ml-4 has-text-white">
             <h1 class="is-size-3 titleFont pb-5">${this.campaign?.name}</h1>
             <h2 class="is-size-5">${this.campaign?.blurb}</h2>
-          </div>
-          <div class="campaign-info-menuWrapper">
-            <menu-component></menu-component>
           </div>
         </div>
       </div>

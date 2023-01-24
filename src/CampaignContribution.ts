@@ -21,7 +21,7 @@ import { LoginContribution } from './contribution/LoginContribution';
 import { CreateAccountContribution } from './contribution/CreateAccountContribution';
 import { ExpressCheckoutContribution } from './contribution/ExpressCheckoutContribution';
 import { CardReward } from './components/CardReward';
-import { CampaignProfile } from './contribution/CampaignProfile';
+import { CampaignHeader } from './contribution/CampaignHeader';
 import { Menu } from './components/Menu';
 import { CardInfo } from './contribution/CardInfo';
 import { GlobalStyles } from './styles/global';
@@ -100,10 +100,6 @@ export class CampaignContribution extends SkhemataBase {
         .tabs li.is-active a {
           border-bottom-color: hsl(141, 71%, 48%);
           color: hsl(141, 71%, 48%);
-        }
-
-        .campaign-categories-list {
-          gap: 1.5rem;
         }
 
         /* 
@@ -221,7 +217,7 @@ export class CampaignContribution extends SkhemataBase {
       'create-account-contribution': CreateAccountContribution,
       'express-checkout-contribution': ExpressCheckoutContribution,
       'card-reward-component': CardReward,
-      'campaign-profile': CampaignProfile,
+      'campaign-header': CampaignHeader,
       'menu-component': Menu,
       'card-information-component': CardInfo,
     };
@@ -370,6 +366,8 @@ export class CampaignContribution extends SkhemataBase {
 
   @property({ type: Object }) campaign?: any;
 
+  @property({ type: String }) campaignId?: number;
+
   @property({ type: Object }) stripeElements?: HTMLElement | null;
 
   @property({ type: String, attribute: 'api_full' }) apiFull?: string;
@@ -430,7 +428,7 @@ export class CampaignContribution extends SkhemataBase {
   async firstUpdated() {
     await super.firstUpdated();
     this.handleAuthStateChange();
-    this.getStripeKeys();
+    await this.getStripeKeys();
     this.stripeElements = this.shadowRoot?.querySelector('stripe-elements');
     this.initStripe();
   }
@@ -440,9 +438,17 @@ export class CampaignContribution extends SkhemataBase {
   };
 
   initStripe() {
+    console.log(
+      'STRIPE: ',
+      window.Stripe,
+      this.authState,
+      this.stripeInfoPublishableKey
+    );
+
     if (window.Stripe && this.authState && this.stripeInfoPublishableKey) {
       const stripe: any = window.Stripe(this.stripeInfoPublishableKey);
       this.stripe = stripe;
+      console.log('STRIPE: ', this.stripe);
     } else {
       console.log('Stripe is not loaded');
     }
@@ -534,15 +540,18 @@ export class CampaignContribution extends SkhemataBase {
           phone_number_id: null,
           use_sca: 1,
         };
-        const response2 = await fetch(`${this.apiFull}campaign/1/pledge`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': localStorage.getItem('skhemataToken') || '',
-          },
-          body: JSON.stringify(pledgeInfo),
-        });
+        const response2 = await fetch(
+          `${this.apiFull}campaign/${this.campaignId}/pledge`,
+          {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': localStorage.getItem('skhemataToken') || '',
+            },
+            body: JSON.stringify(pledgeInfo),
+          }
+        );
         const dataResp2 = await response2.json();
         console.log('response2: ', dataResp2);
         if (dataResp2.message === 'Campaign not approved') {
@@ -551,6 +560,7 @@ export class CampaignContribution extends SkhemataBase {
 
         if (dataResp2.payment_intent_status === 'requires_action') {
           // Use Stripe.js to handle required card action
+          console.log('Stripe: ', this.stripe);
 
           this.stripe
             .handleCardAction(dataResp2.payment_intent_client_secret)
@@ -697,22 +707,20 @@ export class CampaignContribution extends SkhemataBase {
   // https://stripe.com/docs/payments/quickstart
 
   render() {
-    console.log('contribution: ', this.stripeInfoPublishableKey);
+    // console.log('Check: ', this.chosenReward);
 
     return html`
-      <campaign-profile
+      <campaign-header
         .apiUrl="${this.apiUrl}"
         .campaign=${this.campaign}
-      ></campaign-profile>
+      ></campaign-header>
 
       <div class="container mt-4">
-        <!-- <script src="https://js.stripe.com/v3/"></script> -->
-
         <div
           class="is-flex is-justify-content-space-between is-align-items-center my-6"
         >
-          <div class="is-flex is-align-items-center campaign-categories-list">
-            <span class="pr-5">
+          <div class="is-flex is-align-items-center is-flex-gap-5">
+            <span class="">
               <svg
                 width="36"
                 height="36"
@@ -739,6 +747,7 @@ export class CampaignContribution extends SkhemataBase {
             .apiFull="${this.apiFull}"
           ></menu-component>
         </div>
+        <!-- <script src="https://js.stripe.com/v3/"></script> -->
 
         <div class="columns">
           <div class="column">
@@ -957,30 +966,32 @@ export class CampaignContribution extends SkhemataBase {
                 Review Payment
               </h3>
 
-              <div
-                class="is-flex is-justify-content-space-between total-amount-box mt-4 mb-2"
-              >
-                <p class="is-size-5">Contribution:</p>
-                <p class="is-size-5">
-                  ${this.currencySymbols[
-                    this.campaign?.currencies[0].code_iso4217_alpha
-                  ]}
-                  ${this.contributionAmount}
-                  ${this.campaign?.currencies[0].code_iso4217_alpha}
-                </p>
-              </div>
+              <div class="mb-5">
+                <div
+                  class="is-flex is-justify-content-space-between total-amount-box mt-4 mb-2"
+                >
+                  <p class="is-size-5">Contribution:</p>
+                  <p class="is-size-5">
+                    ${this.currencySymbols[
+                      this.campaign?.currencies[0].code_iso4217_alpha
+                    ]}
+                    ${this.contributionAmount}
+                    ${this.campaign?.currencies[0].code_iso4217_alpha}
+                  </p>
+                </div>
 
-              <div
-                class="is-flex is-justify-content-space-between total-amount-box mt-2 mb-5"
-              >
-                <p class="is-size-5">Tip:</p>
-                <p class="is-size-5">
-                  ${this.currencySymbols[
-                    this.campaign?.currencies[0].code_iso4217_alpha
-                  ]}
-                  ${this.campaign?.tip_amount}
-                  ${this.campaign?.currencies[0].code_iso4217_alpha}
-                </p>
+                <!-- <div
+                  class="is-flex is-justify-content-space-between total-amount-box mt-2 "
+                >
+                  <p class="is-size-5">Tip:</p>
+                  <p class="is-size-5">
+                    ${this.currencySymbols[
+                  this.campaign?.currencies[0].code_iso4217_alpha
+                ]}
+                    ${this.campaign?.tip_amount}
+                    ${this.campaign?.currencies[0].code_iso4217_alpha}
+                  </p>
+                </div> -->
               </div>
 
               <div
@@ -1112,7 +1123,11 @@ export class CampaignContribution extends SkhemataBase {
                     </svg>
                   </div>
                 </header>
-                <div class="card-content ${this.openStatus ? '' : 'is-hidden'}">
+                <div
+                  class="card-content ${this.chosenReward === 'standard'
+                    ? ''
+                    : 'is-hidden'}"
+                >
                   <div class="content">
                     <div class="control">
                       <input

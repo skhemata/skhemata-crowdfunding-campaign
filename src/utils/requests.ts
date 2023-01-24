@@ -38,3 +38,25 @@ export async function sendRequest(url: string, method: any, data: any) {
 
   return resp;
 }
+
+// export async function getHeaders(url: string) {
+//   const authToken = window.localStorage.getItem('skhemataToken');
+
+//   let headers: any;
+
+//   try {
+//     const resp = await fetch(API_URL + url, {
+//       headers: {
+//         'X-Auth-Token': authToken || '',
+//       },
+//     });
+
+//     // console.log('Resp: ', resp);
+
+//     headers = [...resp.headers];
+//   } catch (error) {
+//     console.log(error);
+//   }
+
+//   return headers;
+// }

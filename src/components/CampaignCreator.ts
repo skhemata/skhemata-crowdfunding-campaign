@@ -1,3 +1,4 @@
+/* eslint-disable lit/binding-positions */
 /* eslint-disable lit-a11y/anchor-is-valid */
 /* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable import/no-extraneous-dependencies */
@@ -30,6 +31,10 @@ export class CampaignCreator extends LitElement {
   render() {
     // https://origin.thrinacia.com/api/image/campaign_profile
     // https://i.pravatar.cc/300
+
+    // "${this.campaign?.managers[0]?.person_files[0]?.path_external
+    //   ? `${this.apiUrl}/image/campaign_profile/${this.campaign?.managers[0].person_files[0].path_external}`
+    //   : 'https://via.placeholder.com/300'}"
     console.log(this.apiUrl);
 
     return html`
@@ -43,9 +48,7 @@ export class CampaignCreator extends LitElement {
             <img
               class="is-rounded"
               alt="campaign creator avatar"
-              src="${this.campaign?.managers[0].person_files[0].path_external
-                ? `${this.apiUrl}/image/campaign_profile/${this.campaign?.managers[0].person_files[0].path_external}`
-                : 'https://i.pravatar.cc/300'}"
+              src="https://via.placeholder.com/300"
             />
           </figure>
           <h4 class="titleFont is-size-7">

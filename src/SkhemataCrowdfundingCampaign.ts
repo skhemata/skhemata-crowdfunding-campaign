@@ -1,3 +1,4 @@
+/* eslint-disable lit/binding-positions */
 /* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable lit/attribute-value-entities */
 /* eslint-disable no-undef */
@@ -25,6 +26,7 @@ import { Menu } from './components/Menu';
 import { GlobalStyles } from './styles/global';
 import { CampaignCreator } from './components/CampaignCreator';
 import { CampaignReward } from './components/CampaignReward';
+import { CampaignProfile } from './CampaignProfile';
 
 export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   static get styles() {
@@ -45,12 +47,14 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           color: hsl(141, 71%, 48%);
         }
 
-        .contribute-share-container .button {
+        .contribute-share-container .button,
+        .contribute-share-container-mobile .button {
           border-radius: 7.5px !important;
         }
 
-        .campaign-categories-list {
-          gap: 1.5rem;
+        .contribute-share-container-mobile .button,
+        .contribute-share-container-mobile > div {
+          width: 100%;
         }
 
         .campaign-details-container {
@@ -70,14 +74,17 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         }
 
         .mobile-menu {
-          position: absolute;
+          position: fixed;
           top: 0;
           left: 0;
           width: 100%;
-          height: 100%;
           background-color: #fff;
           z-index: 100;
           display: none;
+        }
+
+        .mobile-menu-container {
+          height: 100vh;
         }
 
         .mobile-menu.is-active {
@@ -99,6 +106,26 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
         .tabs {
           display: none;
+        }
+
+        .rewards-section {
+          max-height: 1000px;
+          padding: 0.85rem 1rem 0 1rem;
+          overflow-y: auto;
+        }
+
+        .rewards-section::-webkit-scrollbar {
+          width: 0.25rem;
+        }
+
+        ::-webkit-scrollbar-track {
+          box-shadow: inset 0 0 5px hsl(0, 0%, 48%);
+          border-radius: 6px;
+        }
+
+        .rewards-section::-webkit-scrollbar-thumb {
+          background: hsl(0, 0%, 4%);
+          border-radius: 6px;
         }
 
         @media screen and (min-width: 768px) {
@@ -125,6 +152,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
       'card-reward-component': CardReward,
       'campaign-creator-component': CampaignCreator,
       'campaign-reward-component': CampaignReward,
+      'campaign-profile-component': CampaignProfile,
     };
   }
 
@@ -137,6 +165,10 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   @property({ type: String, attribute: 'campaign_id' }) campaignId?: number;
 
   @property({ type: String, attribute: 'currentPage' }) currentPage?: string;
+
+  @property({ type: String }) clickedReward?: string;
+
+  @property({ type: Number }) clickedRewardAmount?: number;
 
   @property({ type: Object }) campaign?: any;
 
@@ -163,6 +195,10 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
   handleContribute = () => {
     this.currentPage = 'contribution';
+  };
+
+  handleProfile = () => {
+    this.currentPage = 'profile';
   };
 
   handleBack = () => {
@@ -201,6 +237,8 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
         // this.stripeInfo.secret_key = data.secret_key;
         this.stripeInfoPublishableKey = data.publishable_key;
+        // this.stripeInfoPublishableKey =
+        // 'pk_test_51M4V5zELRum7QsqGfXlrGy4uBhrQb6r3xRAQRh3CGQlWvUzM5qS9IWRHbrqQKixpLNVLeGxsHldTix1eE6ELuYkt00oHL38JH4';
         // this.stripeInfo.country_id = data.country_id;
       } catch (error) {
         console.log(error);
@@ -215,12 +253,21 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     }
   };
 
+  handleRewardClick = (reward: string, amount: number) => {
+    this.clickedReward = reward;
+    this.clickedRewardAmount = amount;
+    this.handleContribute();
+  };
+
   render() {
     if (this.currentPage === 'contribution') {
       return html`<campaign-contribution
+        .chosenReward="${this.clickedReward}"
+        .contributionAmount="${this.clickedRewardAmount}"
         .currentPage="${this.currentPage}"
         .handleBack="${this.handleBack}"
         .campaign="${this.campaign}"
+        .campaignId="${this.campaignId}"
         .apiFull="${this.apiFull}"
         .apiUrl="${this.apiUrl}"
         .authState="${this.authState}"
@@ -228,6 +275,18 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         .handleAuthStateChange="${this.handleAuthStateChange}"
         .getStripeKeys="${this.getStripeKeys}"
       ></campaign-contribution>`;
+    }
+
+    if (this.currentPage === 'profile') {
+      return html`<campaign-profile-component
+        .apiFull="${this.apiFull}"
+        .apiUrl="${this.apiUrl}"
+        .campaignId="${this.campaignId}"
+        .campaign="${this.campaign}"
+        .authState="${this.authState}"
+        .handleBack="${this.handleBack}"
+        .handleAuthStateChange="${this.handleAuthStateChange}"
+      ></campaign-profile-component>`;
     }
 
     return html` <div class="container pt-6 p-4 campaign-container">
@@ -275,7 +334,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
                 />
               </svg>
             </span>
-            <div class="is-flex is-align-items-center campaign-categories-list">
+            <div class="is-flex is-align-items-center is-flex-gap-5">
               ${this.campaign?.categories.map(
                 (category: { name: string }) =>
                   html`<span>${category.name}</span>`
@@ -287,6 +346,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
                   .authState="${this.authState}"
                   .handleAuthStateChange="${this.handleAuthStateChange}"
                   .apiFull="${this.apiFull}"
+                  .handleProfile="${this.handleProfile}"
                 ></menu-component>
               </div>
             </div>
@@ -304,10 +364,10 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
           <div class="columns campaign-details-container">
           <div class="column is-one-third">
-              <div class="columns buttons is-flex contribute-share-container">
+              <div class="columns buttons is-flex contribute-share-container px-4">
                   <button
                     class="column button is-success is-small is-responsive is-flex-grow-1 campaign-reward-button"
-                    @click="${this.handleContribute}"
+                    @click="${() => this.handleRewardClick('standard', 1)}"
                   >
                     <span class="is-size-5">Contribute</span>
                   </button>
@@ -323,12 +383,13 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
                     this.campaign
                   }" .apiUrl="${this.apiUrl}"></campaign-creator-component>
 
-                <div class="mt-6">
+                <div class="mt-6 is-flex is-flex-direction-column is-flex-gap-6">
                 ${
                   this.campaign?.pledges && this.campaign?.pledges.length > 0
                     ? this.campaign.pledges.map(
                         (pledge: any) => html`
                           <campaign-reward-component
+                            .handleRewardClick=${this.handleRewardClick}
                             .pledge=${pledge}
                             .handleContribute=${this.handleContribute}
                             .campaign=${this.campaign}
@@ -397,15 +458,29 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </svg>
         </a>
         <div class="mobile-menu-container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-flex-gap-4">
-        <ul id="tabs2">
+        <ul class="is-flex is-flex-direction-column is-flex-gap-4 mb-6" id="tabs2">
             <li class="is-active">
-              <a data-tab="campaign">Campaign</a>
+              <a  class="titleFont has-text-success has-text-weight-bold is-size-4" data-tab="campaign">Campaign</a>
             </li>
-            <li><a data-tab="faq">FAQ</a></li>
-            <li><a data-tab="backers">Backers</a></li>
-            <li><a data-tab="updates">Updates</a></li>
-            <li><a data-tab="comments">Comments</a></li>
+            <li><a class="titleFont has-text-success has-text-weight-bold is-size-4"  data-tab="faq">FAQ</a></li>
+            <li><a class="titleFont has-text-success has-text-weight-bold is-size-4"  data-tab="backers">Backers</a></li>
+            <li><a class="titleFont has-text-success has-text-weight-bold is-size-4"  data-tab="updates">Updates</a></li>
+            <li><a class="titleFont has-text-success has-text-weight-bold is-size-4"  data-tab="comments">Comments</a></li>
           </ul>
+          <div class="is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-flex-gap-4 contribute-share-container-mobile">
+              <button
+                class="button is-success is-small is-flex-grow-1 campaign-reward-button"
+                @click="${this.handleContribute}"
+              >
+                <span class="is-size-5">Contribute</span>
+              </button>
+
+              <button
+                class="button is-dark is-small is-flex-grow-1 campaign-reward-button"
+              >
+                <span class="is-size-5">Share</span>
+              </button>
+          </div>
         </div>
       </div>
     </div>`;

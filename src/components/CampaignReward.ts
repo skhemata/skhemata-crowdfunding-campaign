@@ -196,13 +196,16 @@ export class CampaignReward extends LitElement {
   @property({ type: Function })
   handleChosenReward!: (reward: string, pledge: object) => void;
 
+  @property({ type: Function })
+  handleRewardClick!: (reward: string, amount: number) => void;
+
   async firstUpdated() {
     this.contributionAmount = this.pledge.amount;
   }
 
   render() {
     return html`
-      <div class="columns campaign-reward-wrapper mb-6">
+      <div class="columns campaign-reward-wrapper">
         <div>
           <div
             class="has-background-success is-flex is-justify-content-center is-align-items-center campaign-reward-header py-2 px-2"
@@ -221,9 +224,11 @@ export class CampaignReward extends LitElement {
             </svg>
 
             <h3 class="titleFont is-size-5 has-text-weight-bold">
-              ${this.currencySymbols[
-                this.campaign?.currencies[0].code_iso4217_alpha
-              ]}${this.pledge.amount}
+              ${
+                this.currencySymbols[
+                  this.campaign?.currencies[0].code_iso4217_alpha
+                ]
+              }${this.pledge.amount}
               ${this.campaign?.currencies[0].code_iso4217_alpha}
             </h3>
           </div>
@@ -253,10 +258,12 @@ export class CampaignReward extends LitElement {
             </div>
           </div>
         </div>
-        <div class="campaign-reward-hover-background">
-          <h4 class="titleFont is-size-3 has-text-weight-bold has-text-white ">
-            Choose Reward
-          </h4>
+        <div class="campaign-reward-hover-background" @click="${() =>
+          this.handleRewardClick(this.pledge.name, this.pledge.amount)}">
+              <h4 class="titleFont is-size-3 has-text-weight-bold has-text-white ">
+                Choose Reward
+              </h4>
+          </a>
         </div>
       </div>
     `;

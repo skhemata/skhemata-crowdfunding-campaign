@@ -42,6 +42,8 @@ export class LoginContribution extends LitElement {
 
         const res = await loginRequest('/authenticate', 'POST', info);
         const data = await res.json();
+        console.log('User Info: ', data);
+
         if (data.auth_token !== undefined) {
           window.localStorage.setItem('skhemataToken', data.auth_token);
         }
