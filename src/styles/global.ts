@@ -3,11 +3,11 @@ import { css } from 'lit';
 export const GlobalStyles = css`
   /* @import url('https://fonts.googleapis.com/css2?family=Montserrat&family=Nunito:wght@600;700&display=swap'); */
 
-  /* *,
+  *,
   *::before,
   *::after {
     box-sizing: border-box;
-  } */
+  }
 
   * {
     font-family: 'Montserrat', sans-serif;

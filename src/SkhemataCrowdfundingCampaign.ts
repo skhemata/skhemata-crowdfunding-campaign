@@ -62,8 +62,25 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         }
 
         .campaign-reward-button {
-          padding: 0.5rem 0.75rem;
+          /* padding: 0.5rem 0.75rem; */
+          min-height: 2.5rem;
+          position: relative;
         }
+
+        .campaign-reward-button span {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          margin: 0;
+          position: absolute;
+          // display in the middle of the button
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+
+        }
+
 
         .campaign-details-container > .column:first-of-type {
           order: 1;
@@ -184,7 +201,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
   async firstUpdated() {
     await super.firstUpdated();
     this.getCampaign();
-    this.tabEvent();
+    // this.tabEvent();
 
     if (this.apiUrl && this.locPath) {
       this.apiFull = this.apiUrl + this.locPath;
@@ -258,6 +275,25 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
     this.clickedRewardAmount = amount;
     this.handleContribute();
   };
+  
+  tabClickEvent = (e: any) => {
+    let selected: any = e.target;
+      if (selected && selected.getAttribute('data-tab')) {
+        this.updateActiveTab(selected, 'tabs');
+        this.updateActiveTab(selected, 'tabs2');
+      }
+      
+      console.log(e.target.parentElement.parentElement.id)
+      if(e.target.parentElement.parentElement.id === 'tabs2') {
+        this.mobileMenuToggle();
+      }
+    // this.shadowRoot?.getElementById('tabs')?.addEventListener('click', e => {
+    //   let selected: any = e.target;
+    //   if (selected && selected.getAttribute('data-tab')) {
+    //     this.updateActiveTab(selected, 'tabs');
+    //   }
+    // });
+  }
 
   render() {
     if (this.currentPage === 'contribution') {
@@ -364,7 +400,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
           <div class="columns campaign-details-container">
           <div class="column is-one-third">
-              <div class="columns buttons is-flex contribute-share-container px-4">
+              <div class="columns is-flex contribute-share-container px-4 is-flex-gap-4">
                   <button
                     class="column button is-success is-small is-responsive is-flex-grow-1 campaign-reward-button"
                     @click="${() => this.handleRewardClick('standard', 1)}"
@@ -410,7 +446,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
 
             <div class="column">
               <div class="tabs">
-                <ul id="tabs">
+                <ul id="tabs" @click="${this.tabClickEvent}">
                   <li class="is-active">
                     <a data-tab="campaign">Campaign</a>
                   </li>
@@ -458,7 +494,7 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
           </svg>
         </a>
         <div class="mobile-menu-container is-flex is-flex-direction-column is-justify-content-center is-align-items-center is-flex-gap-4">
-        <ul class="is-flex is-flex-direction-column is-flex-gap-4 mb-6" id="tabs2">
+        <ul class="is-flex is-flex-direction-column is-flex-gap-4 mb-6" id="tabs2" @click="${this.tabClickEvent}">
             <li class="is-active">
               <a  class="titleFont has-text-success has-text-weight-bold is-size-4" data-tab="campaign">Campaign</a>
             </li>
@@ -502,6 +538,8 @@ export class SkhemataCrowdfundingCampaign extends SkhemataBase {
         console.log('error');
       });
   }
+
+  
 
   private tabEvent() {
     this.shadowRoot?.getElementById('tabs')?.addEventListener('click', e => {

@@ -136,6 +136,8 @@ export class BackedCampaignListItem extends LitElement {
 
   @property({ type: Array }) pledges?: any;
 
+  @property({ type: Number }) activePledgePage = 0;
+
   @property({ type: String, attribute: 'api_full' }) apiFull?: string;
 
   @property({ type: Boolean }) openStatus: boolean | undefined;
@@ -149,6 +151,8 @@ export class BackedCampaignListItem extends LitElement {
       currency: 'CAD',
     }).format(parseFloat(amount))}`;
 
+
+    // show pledges
   showPledges = async () => {
     this.openStatus = !this.openStatus;
 
@@ -159,9 +163,25 @@ export class BackedCampaignListItem extends LitElement {
       }
     );
     const pledges = await response.json();
-    this.pledges = pledges;
-    console.log(pledges);
+
+    const newPledges = this.chunkArray(pledges, 10)
+    this.pledges = newPledges;
+    console.log('New Pledges: ', newPledges);
+
   };
+
+  chunkArray = (arr: any[], chunkSize: number) => {
+    const result: any = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+      result.push(arr.slice(i, i + chunkSize));
+    }
+    return result;
+  }
+
+  pledgePageClick = (index: number) => {
+    this.activePledgePage = index
+    this.requestUpdate();
+  }
 
   render() {
     return html`
@@ -204,7 +224,7 @@ export class BackedCampaignListItem extends LitElement {
         </div>
 
         <div>
-          <a class="" @click="${this.showPledges}">Pledges</a>
+          <a class="" @click="${this.showPledges}">Contributions</a>
 
           <div>
             ${this.openStatus
@@ -225,8 +245,8 @@ export class BackedCampaignListItem extends LitElement {
                         </tr>
                       </thead>
                       <tbody>
-                        ${this.pledges.length > 0
-                          ? this.pledges.map(
+                        ${this.pledges[this.activePledgePage].length > 0
+                          ? this.pledges[this.activePledgePage].map(
                               (pledge: any) => html`
                                 <tr>
                                   <td>${pledge.id}</td>
@@ -242,6 +262,32 @@ export class BackedCampaignListItem extends LitElement {
                           : null}
                       </tbody>
                     </table>
+
+                    ${
+                      this.pledges.length > 1 ? html`
+                        <nav
+                          class="pagination is-centered is-small"
+                          role="navigation"
+                          aria-label="pagination"
+                        >
+                          <ul class="pagination-list" id="pagination-list">
+                            ${
+                              this.pledges.map((pledge: any, index: number) => html`
+                                <li><a
+                              class="pagination-link ${this.activePledgePage === index ? 'has-background-success has-text-white' : ''} "
+                              @click="${() => this.pledgePageClick(index)}"
+                              >${index + 1}</a
+                            >
+                          </li>
+                              
+                              `)
+                            }
+                          
+                          </ul>
+                        </nav>
+                      ` : null
+                    }
+                    
                   `
                 : html`no pledges`
               : null}

@@ -57,6 +57,14 @@ export class CampaignProfile extends SkhemataBase {
           border-radius: 0 6px 6px 0;
         }
 
+        .campaign-creator-profile-white-box {
+          border-radius: 9px;
+        }
+
+        .campaign-creator-profile-container > .column:first-of-type {
+          border-radius: 9px 9px 0 0;
+          padding-top: 8rem !important;
+        }
         /* @media screen and (min-width: 768px) {} */
       `,
     ];
@@ -223,10 +231,24 @@ export class CampaignProfile extends SkhemataBase {
 
     await this.loadUserProfile();
     await this.loadBackedCampaigns();
+    this.campaignPhoto()
   }
 
   updated() {
     this.getCampaignMainImage();
+  }
+
+  campaignPhoto = () => {
+    if(this.shadowRoot){
+      const box = this.shadowRoot.querySelector<HTMLElement>('.campaign-creator-profile-container > .column');
+      if(box){
+        box.style.backgroundImage = `url(${this.campaignMainImage})`;
+        box.style.backgroundPosition = 'top';
+        box.style.backgroundColor = '#cccccc';
+        box.style.backgroundRepeat = 'no-repeat';
+        box.style.backgroundSize = '100% auto';
+      }
+    }
   }
 
   loadUserProfile = async () => {
@@ -333,11 +355,11 @@ export class CampaignProfile extends SkhemataBase {
           </div>
         </div>
 
-        <div class="columns campaign-creator-profile-container">
+        <div class="columns campaign-creator-profile-container is-flex-gap-5">
           <div
-            class="column is-one-third is-flex is-justify-content-center is-align-items-center p-5"
+            class="column is-one-third is-flex is-justify-content-center is-align-items-start px-4"
           >
-            <div class="has-background-white p-4">
+            <div class="has-background-white p-5 campaign-creator-profile-white-box">
               <!-- Progress -->
               <div class="mb-6">
                 <div class="has-text-centered  mb-5">

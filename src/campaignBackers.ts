@@ -1,3 +1,5 @@
+/* eslint-disable no-self-compare */
+/* eslint-disable no-constant-condition */
 /* eslint-disable no-else-return */
 /* eslint-disable array-callback-return */
 /* eslint-disable lit/binding-positions */
@@ -169,11 +171,13 @@ export class campaignBackers extends SkhemataBase {
 
   @property({ type: Number }) totalPages = 1;
 
-  @property({ type: Object }) backers?: any;
+  @property({ type: Array }) backers = [];
 
-  @property({ type: String }) campaignBackers?: any;
+  @property({ type: String }) campaignBackers: any;
 
   async firstUpdated() {
+    await super.firstUpdated();
+    
     this.getBackers();
   }
 
@@ -225,6 +229,8 @@ export class campaignBackers extends SkhemataBase {
   // };
 
   createPaginationLinks() {
+    console.log('PAGINATION:', this.totalPages, this.backers.length);
+
     const pageNumbers = [...Array(this.totalPages).keys()].map(
       (n: number) => n + 1
     );
@@ -234,7 +240,6 @@ export class campaignBackers extends SkhemataBase {
         return html`<li>
           <a
             class="pagination-link"
-            href="#"
             @click="${() => this.pageClick(pageNumber)}"
             >${pageNumber}</a
           >
@@ -243,7 +248,6 @@ export class campaignBackers extends SkhemataBase {
         return html`<li>
           <a
             class="pagination-link is-current"
-            href="#"
             @click="${() => this.pageClick(pageNumber)}"
             >${pageNumber}</a
           >
@@ -255,7 +259,6 @@ export class campaignBackers extends SkhemataBase {
         return html`<li>
           <a
             class="pagination-link"
-            href="#"
             @click="${() => this.pageClick(pageNumber)}"
             >${pageNumber}</a
           >
@@ -269,10 +272,21 @@ export class campaignBackers extends SkhemataBase {
     });
   }
 
-  render() {
-    console.log('backers: ', this.backers);
-    console.log('campaign backers: ', this.campaignBackers);
+  prevPage = () => {
+    if (this.activePage > 1) {
+      this.activePage -= 1;
+      this.pageClick(this.activePage);
+    }
+  }
 
+  nextPage = () => {
+    if (this.activePage < this.totalPages) {
+      this.activePage += 1;
+      this.pageClick(this.activePage);
+    }
+  }
+
+  render() {
     return html`
       <div class="">
         ${this.backers?.length > 0
@@ -332,15 +346,17 @@ export class campaignBackers extends SkhemataBase {
               `
             )
           : html`<h4>No backers</h4>`}
-        ${this.backers?.length > 10
+
+        
+        ${this.totalPages > 1
           ? html`
               <nav
                 class="pagination is-centered is-small"
                 role="navigation"
                 aria-label="pagination"
               >
-                <a class="pagination-previous">Previous</a>
-                <a class="pagination-next">Next page</a>
+                <a class="pagination-previous" @click="${this.prevPage}">Previous</a>
+                <a class="pagination-next" @click="${this.nextPage}">Next page</a>
                 <ul class="pagination-list" id="pagination-list">
                   ${this.createPaginationLinks()}
                   <!-- ${[...Array(this.totalPages).keys()]
@@ -383,24 +399,26 @@ export class campaignBackers extends SkhemataBase {
       })
       .then(data => {
         this.backers = data;
-        this.backersMarkup();
+        console.log('backers: ', this.backers);
+        
+        // this.backersMarkup();
       })
       .catch(() => {
         console.log('error');
       });
   }
 
-  private backersMarkup() {
-    if (this.backers) {
-      console.log(this.backers);
-      for (let key in this.backers) {
-        this.campaignBackers = html`<div class="faq-title">
-          ${this.backers[key].first_name} ${this.backers[key].last_name}
-          ${this.backers[key].total_amount} Backed
-          ${this.backers[key].total_backed}
-          ${this.backers[key].total_backed === 1 ? 'Campaign' : 'Campaigns'}
-        </div> `;
-      }
-    }
-  }
+//   private backersMarkup() {
+//     if (this.backers) {
+//       console.log(this.backers);
+//       for (let key in this.backers) {
+//         this.campaignBackers = html`<div class="faq-title">
+//           ${this.backers[key].first_name} ${this.backers[key].last_name}
+//           ${this.backers[key].total_amount} Backed
+//           ${this.backers[key].total_backed}
+//           ${this.backers[key].total_backed === 1 ? 'Campaign' : 'Campaigns'}
+//         </div> `;
+//       }
+//     }
+//   }
 }
