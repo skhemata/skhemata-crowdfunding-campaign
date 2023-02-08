@@ -39,7 +39,7 @@ export class CampaignCreator extends LitElement {
 
     return html`
       <div
-        class="columns campaign-creator-container has-background-grey-lighter"
+        class="columns campaign-creator-container has-background-grey-lighter p-2"
       >
         <div
           class="column is-one-quarter campaign-creator-image-box is-flex is-flex-direction-column is-justify-content-center is-align-items-center"
@@ -51,7 +51,7 @@ export class CampaignCreator extends LitElement {
               src="https://via.placeholder.com/300"
             />
           </figure>
-          <h4 class="titleFont is-size-7">
+          <h4 class="titleFont is-size-7 has-text-centered">
             ${this.campaign?.managers[0].first_name}
             ${this.campaign?.managers[0].last_name}
           </h4>

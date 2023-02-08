@@ -48,6 +48,20 @@ export class campaignDescription extends SkhemataBase {
         .campaign-description p {
           margin-bottom: 1rem;
         }
+
+        .campaign-description ul,
+        .campaign-description ol {
+          padding-left: 2rem;
+        }
+
+        .campaign-description h1,
+        .campaign-description h2,
+        .campaign-description h3,
+        .campaign-description h4,
+        .campaign-description h5,
+        .campaign-description h6 {
+          text-transform: capitalize;
+        }
       `,
     ];
   }
